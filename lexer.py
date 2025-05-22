@@ -7,7 +7,6 @@ if len(sys.argv) < 2 or len(sys.argv) >= 3:
     print(f"\033[1;31mError!\033[0m You sent {len(sys.argv)} arguments.\n\033[1;33mUsage:\033[0m lexerpy [argument]")
     sys.exit(1)
 
-
 file = sys.argv[1]
 
 # Verify that file ends in .imperat
@@ -22,6 +21,7 @@ with open(file, "r") as f:
 
 tokens = (
     'TkIf',
+    'TkFi',
     'TkWhile',
     'TkEnd',
     'TkFor',
@@ -64,6 +64,7 @@ tokens = (
 
 reserved = {
     'if': 'TkIf',
+    'fi': 'TkFi',
     'while': 'TkWhile',
     'end': 'TkEnd',
     'for': 'TkFor',
@@ -115,13 +116,19 @@ t_TkCBracket= r'\]'
 t_TkTwoPoints = r':'
 t_TkApp = r'\.'
 
+# We ignore empty char, tab and all comments using //
+t_ignore = ' \t'
+def t_COMMENT(t):
+    r'//.*'
+    pass
+
 def t_TkId(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
     t.type = reserved.get(t.value, 'TkId')
     return t
 
 def t_TkString(t):
-    r'".*"'
+    r'"([^"\\\n]|\\.)*"'
     return t
 
 def t_TkNum(t):
@@ -136,14 +143,7 @@ def t_error(t):
     errors.append(f'\033[1;31mError:\033[0m Unexpected character "{t.value[0]}" in row {t.lineno}, column {col}')
     t.lexer.skip(1)
 
-# We ignore empty char, tab and all comments using //
-t_ignore = ' \t'
-def t_COMMENT(t):
-    r'//.*'
-    pass
-
 lexer = lex.lex()
-
 lexer.input(data)
 
 tokens = []
@@ -158,7 +158,10 @@ else:
     for tok in tokens:
         col = find_column(data, tok)
         if(tok.type == "TkNum" or tok.type == "TkId" or tok.type == "TkString"):
-            print(f"{tok.type}({tok.value}) {tok.lineno} {col}")
+            if(tok.type == "TkId"):
+                print(f'{tok.type}("{tok.value}") {tok.lineno} {col}')
+            else:
+                print(f"{tok.type}({tok.value}) {tok.lineno} {col}")
         else:
             print(f"{tok.type} {tok.lineno} {col}")
 
