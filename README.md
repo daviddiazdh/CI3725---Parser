@@ -16,6 +16,6 @@ The **Lexer** is the module responsible for recognizing valid and invalid tokens
 
 ```bash
 python lexer.py [file]
-bash```
+```
 
 - [file] has to be a .imperat file
