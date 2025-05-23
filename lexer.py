@@ -2,9 +2,11 @@ import ply.lex as lex
 import sys
 import re
 
-# Team:
-# David Díaz | 20-10019
-# Alan Argotte | 19-10664
+#  ================================
+# | Team:                          |
+# | David Díaz / 20-10019          |
+# | Alan Argotte / 19-10664        |
+#  ================================
 
 # Verify arguments
 if len(sys.argv) < 2 or len(sys.argv) >= 3:
