@@ -1,9 +1,0 @@
-{
-    int a;
-    function[..2] f;
-    f := 3, 2, 1;
-    a := f(2:4).2; // a toma el valor de 4 pero no ocurren cambios persistentes en f
-    a := f.2; // a toma el valor de 1
-    f := f(2:4); // f es modificado por la funcion {<0;3>, <1;2>, <2;4>}
-    a := f.2; // a toma el valor de 4
-}
