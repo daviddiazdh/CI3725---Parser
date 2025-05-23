@@ -1,7 +1,20 @@
-# CI3725---Parser
-We will create a micro parser that will be able to translate code from Imperative Language to Lambda Language
+# 🧠 CI3725 — Micro Parser
 
-## First Step
-- Lexer: It's the module which recognizes valid and invalid tokens, it returns a list of errors, in case there are, or a list of recognized tokens. This step is strictly necessary for the other steps to work.
-- Lexer usage: python lexer.py [file]
-    - It's necessary for the file to be an .imperat file
+This project implements a micro parser capable of **translating code** from an **Imperative Language** to a **Lambda Language**.
+
+---
+
+## 📄 First Step: Lexer
+
+The **Lexer** is the module responsible for recognizing valid and invalid tokens. It outputs either:
+- A list of recognized tokens, or
+- A list of lexical errors (if any are found)
+
+> ⚠️ This step is **essential** for all subsequent stages of the parser.
+
+### 📦 Usage
+
+```bash
+python lexer.py [file]
+
+- [file] has to be a .imperat file
