@@ -2,6 +2,10 @@ import ply.lex as lex
 import sys
 import re
 
+# Team:
+# David Díaz | 20-10019
+# Alan Argotte | 19-10664
+
 # Verify arguments
 if len(sys.argv) < 2 or len(sys.argv) >= 3:
     print(f"Error: You sent {len(sys.argv)} arguments.\nUsage: python lexer.py [argument]")
@@ -13,12 +17,14 @@ file = sys.argv[1]
 pattern = r".+\.imperat"
 
 if not re.fullmatch(pattern, file):
-    print(f"Error! You didn't send an .imperat file")
+    print(f"Error: You didn't send an .imperat file")
     sys.exit(1)
 
+# Read data file
 with open(file, "r") as f:
     data = f.read()
 
+# Declaring Tokens
 tokens = (
     'TkIf',
     'TkFi',
@@ -63,6 +69,7 @@ tokens = (
     'TkApp',
 )
 
+# Reserved words
 reserved = {
     'if': 'TkIf',
     'fi': 'TkFi',
@@ -80,19 +87,19 @@ reserved = {
     'and': 'TkAnd',
 }
 
-# Function to find columns from a token
+# Function to calculate token's column
 def find_column(input, token):
     last_cr = input.rfind('\n', 0, token.lexpos)
     if last_cr < 0:
         last_cr = -1
     return token.lexpos - last_cr
 
-# Function to update lines
+# Function to update rows
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
-
+# Regex section to identify tokens
 t_TkAsig = r':='
 t_TkOBlock = r'{'
 t_TkCBlock = r'}'
@@ -125,6 +132,7 @@ def t_COMMENT(t):
     r'//.*'
     pass
 
+# Regex functions section to identify tokens
 def t_TkId(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
     t.type = reserved.get(t.value, 'TkId')
@@ -143,20 +151,23 @@ def t_TkNum(t):
 errors = []
 def t_error(t):
     col = find_column(data, t)
-    errors.append(f'Error: Unexpected character "{t.value[0]}" in row {t.lineno}, column {col}')
+    errors.append(f'Error: Unexpected character "{t.value[0]}" in row {t.lineno}, column {col}') # Appending errors in array errors
     t.lexer.skip(1)
 
 lexer = lex.lex()
 lexer.input(data)
 
+# Create a token array that will store tokens
 tokens = []
 for tok in lexer:
     tokens.append(tok)
 
+# If errors array is not empty, then we only print errors
 if errors:
     for e in errors:
         print(e)
     tokens=[]
+# If errors array is empty, then we print tokens
 else:
     for tok in tokens:
         col = find_column(data, tok)
