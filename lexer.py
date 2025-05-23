@@ -2,9 +2,9 @@ import ply.lex as lex
 import sys
 import re
 
-# sys.argv[1] en adelante son los argumentos
+# Verify arguments
 if len(sys.argv) < 2 or len(sys.argv) >= 3:
-    print(f"\033[1;31mError!\033[0m You sent {len(sys.argv)} arguments.\n\033[1;33mUsage:\033[0m lexerpy [argument]")
+    print(f"Error: You sent {len(sys.argv)} arguments.\nUsage: python lexer.py [argument]")
     sys.exit(1)
 
 file = sys.argv[1]
@@ -13,7 +13,7 @@ file = sys.argv[1]
 pattern = r".+\.imperat"
 
 if not re.fullmatch(pattern, file):
-    print(f"\033[1;31mError!\033[0m You didn't send an \033[1;34m.imperat\033[0m file")
+    print(f"Error! You didn't send an .imperat file")
     sys.exit(1)
 
 with open(file, "r") as f:
@@ -31,6 +31,7 @@ tokens = (
     'TkTrue',
     'TkFalse',
     'TkFunction',
+    'TkSkip',
     'TkId',
     'TkAsig',
     'TkNum',
@@ -73,6 +74,7 @@ reserved = {
     'bool': 'TkBool',
     'true': 'TkTrue',
     'false': 'TkFalse',
+    'skip': 'TkSkip',
     'function': 'TkFunction',
     'or': 'TkOr',
     'and': 'TkAnd',
@@ -89,6 +91,7 @@ def find_column(input, token):
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
+
 
 t_TkAsig = r':='
 t_TkOBlock = r'{'
@@ -128,7 +131,7 @@ def t_TkId(t):
     return t
 
 def t_TkString(t):
-    r'"([^"\\\n]|\\.)*"'
+    r'"([^"\\\n]|(\\n|\\\"|\\\\))*"'
     return t
 
 def t_TkNum(t):
@@ -140,7 +143,7 @@ def t_TkNum(t):
 errors = []
 def t_error(t):
     col = find_column(data, t)
-    errors.append(f'\033[1;31mError:\033[0m Unexpected character "{t.value[0]}" in row {t.lineno}, column {col}')
+    errors.append(f'Error: Unexpected character "{t.value[0]}" in row {t.lineno}, column {col}')
     t.lexer.skip(1)
 
 lexer = lex.lex()
@@ -164,4 +167,3 @@ else:
                 print(f"{tok.type}({tok.value}) {tok.lineno} {col}")
         else:
             print(f"{tok.type} {tok.lineno} {col}")
-
