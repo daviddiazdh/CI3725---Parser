@@ -51,7 +51,7 @@ def p_declaration_list(p):
 
 def p_declaration(p):
     '''declaration : TkInt variable_list
-                   | TkBool variable_list'''
+                    | TkBool variable_list'''
     p[0] = (p[1], p[2]) 
 
 def p_declaration_function(p):
@@ -60,7 +60,7 @@ def p_declaration_function(p):
 
 def p_variable_list(p):
     '''variable_list : variable_list TkComma variable
-                     | variable'''
+                        | variable'''
     if len(p) == 4:
         p[0] = p[1] + [p[3]]
     else:
@@ -74,7 +74,7 @@ def p_variable(p):
 
 def p_statement_list(p):
     '''statement_list : statement_list TkSemicolon statement
-                      | statement'''
+                        | statement'''
     if len(p) == 4:
         p[0] = p[1] + [p[3]]
     else:
@@ -83,9 +83,9 @@ def p_statement_list(p):
 
 def p_statement_asig(p):
     '''statement : TkId TkAsig expression
-                 | TkId TkAsig bool_expression
-                 | TkId TkAsig expression_list
-                 | TkId TkAsig function_mod'''
+                    | TkId TkAsig bool_expression
+                    | TkId TkAsig expression_list
+                    | TkId TkAsig function_mod'''
     p[0] = ("assign", p[1], p[3])
 
 def p_statement_if(p):
