@@ -1,0 +1,29 @@
+{
+    int a, x;
+    bool y;
+    function[..3] x, y;
+
+    x := 2 * 2 + 2;
+
+    if (true and x < 5 or x > 2) --> 
+        x := 2
+    [] !(x==25*25*25) -->
+        y := false;
+        z := 2*25 + 2
+    [] true -->
+        {
+            int a;
+            a := 1
+        }
+    fi;
+
+    while i < 2 --> 
+        while j < 3 --> 
+            y := 3
+        end;
+        x := true;
+        print 2 + 2 + "Hola, tu edad es:" + ", crack.\n"
+    end
+}
+
+

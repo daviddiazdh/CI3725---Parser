@@ -32,7 +32,6 @@ tokens = (
     'TkFi',
     'TkWhile',
     'TkEnd',
-    'TkFor',
     'TkPrint',
     'TkInt',
     'TkBool',
@@ -56,6 +55,7 @@ tokens = (
     'TkPlus',
     'TkMinus',
     'TkMult',
+    'TkDiv',
     'TkOr',
     'TkAnd',
     'TkNot',
@@ -77,7 +77,6 @@ reserved = {
     'fi': 'TkFi',
     'while': 'TkWhile',
     'end': 'TkEnd',
-    'for': 'TkFor',
     'print': 'TkPrint',
     'int': 'TkInt',
     'bool': 'TkBool',
@@ -160,18 +159,18 @@ lexer = lex.lex()
 lexer.input(data)
 
 # Create a token array that will store tokens
-tokens = []
+recognized_tokens = []
 for tok in lexer:
-    tokens.append(tok)
+    recognized_tokens.append(tok)
 
 # If errors array is not empty, then we only print errors
 if errors:
     for e in errors:
         print(e)
-    tokens=[]
+    recognized_tokens=[]
 # If errors array is empty, then we print tokens
 else:
-    for tok in tokens:
+    for tok in recognized_tokens:
         col = find_column(data, tok)
         if(tok.type == "TkNum" or tok.type == "TkId" or tok.type == "TkString"):
             if(tok.type == "TkId"):
