@@ -37,16 +37,16 @@ precedence = (
 
 def p_program(p):
     '''program : TkOBlock declaration_list TkSemicolon statement_list TkCBlock'''
-    p[0] = ("block", ("declare", p[2]), (p[4]))
+    p[0] = ["program", p[2] + p[4]]
 
 
 def p_declaration_list(p):
     '''declaration_list : declaration_list TkSemicolon declaration
                         | declaration'''
     if len(p) == 4:
-        p[0] = ('sequencing', p[1], p[3])
+        p[0] = p[1] + [p[3]] 
     else:
-        p[0] = p[1]   
+        p[0] = [p[1]]        
 
 
 def p_declaration(p):
@@ -54,19 +54,17 @@ def p_declaration(p):
                     | TkBool variable_list'''
     p[0] = (p[1], p[2]) 
 
-
 def p_declaration_function(p):
     '''declaration : TkFunction TkOBracket TkSoForth TkNum TkCBracket variable_list'''
-    p[0] = (p[1] + '[..literal: ' + str(p[4]) + ']', p[6])
-
+    p[0] = (p[1], 'range : 0..' + str(p[4]), p[6])
 
 def p_variable_list(p):
     '''variable_list : variable_list TkComma variable
                         | variable'''
     if len(p) == 4:
-        p[0] = p[1] + ', ' + p[3]
+        p[0] = p[1] + [p[3]]
     else:
-        p[0] = p[1]
+        p[0] = [p[1]]
 
 
 def p_variable(p):
@@ -78,125 +76,82 @@ def p_statement_list(p):
     '''statement_list : statement_list TkSemicolon statement
                         | statement'''
     if len(p) == 4:
-        p[0] = ('sequencing', p[1], p[3])
+        p[0] = p[1] + [p[3]]
     else:
-        p[0] = p[1]
+        p[0] = [p[1]]
 
 
 def p_statement_asig(p):
     '''statement : TkId TkAsig expression
+                    | TkId TkAsig bool_expression
                     | TkId TkAsig expression_list
                     | TkId TkAsig function_mod'''
-    p[0] = ("asig", "ident: " + p[1], p[3])
-
+    p[0] = ("assign", p[1], p[3])
 
 def p_statement_if(p):
     '''statement : TkIf if_body TkFi'''
     p[0] = ("if", p[2])
 
-
 def p_if_body(p):
-    '''if_body : if_body TkGuard expression TkArrow statement_list
-                | expression TkArrow statement_list'''
-    if(len(p) == 6):
-        p[0] = ("guard", p[1], ("then", p[3], p[5]))
-    else:
+    '''if_body : bool_expression TkArrow statement_list
+                | if_body TkGuard bool_expression TkArrow statement_list'''
+    if(len(p) == 4):
         p[0] = ("then", p[1], p[3])
-
+    else:
+        p[0] = (p[1], ("then",  p[3], p[5]))
 
 def p_statement_while(p):
-    '''statement : TkWhile expression TkArrow statement_list TkEnd'''
-    p[0] = ("while", ("then", p[2], p[4]))
-
+    '''statement : TkWhile bool_expression TkArrow statement_list TkEnd'''
+    p[0] = ("while", p[2], p[4])
 
 def p_statement_print(p):
     '''statement : TkPrint expression
+                | TkPrint bool_expression
                 | TkPrint string'''
     p[0] = ("print", p[2])
-
 
 def p_statement_skip(p):
     '''statement : TkSkip'''
     p[0] = (p[1])
 
-
 def p_string_binop(p):
     '''string : string TkPlus string
                 | string TkPlus expression
                 | expression TkPlus string'''
-    p[0] = ('plus', p[1], p[3])
+    p[0] = (p[2], p[1], p[3])
 
 def p_string(p):
     '''string : TkString'''
-    p[0] = ('string: ' + p[1])
-
+    p[0] = ('string', p[1])
 
 def p_string_parenthesis(p):
     '''string : TkOpenPar TkString TkClosePar'''
-    p[0] = ('string: ' + p[2])
-
+    p[0] = ('string', p[2])
 
 def p_statement_program(p):
     '''statement : program'''
     p[0] = p[1]
 
-
 def p_expression_list(p):
     '''expression_list : expression_list TkComma expression
                         | expression TkComma expression'''
     if len(p) == 4:
-        p[0] = ("comma", p[1], p[3]) 
-
+        p[0] = p[1] + p[3] 
 
 def p_expression_binop(p):
     '''expression : expression TkPlus expression
-                    | expression TkMinus expression
-                    | expression TkMult expression
-                    | expression TkAnd expression
-                    | expression TkOr expression
-                    | expression TkEqual expression
-                    | expression TkNEqual expression
-                    | TkNot expression
-                    | TkMinus expression
-                    | expression TkLess expression
-                    | expression TkGreater expression
-                    | expression TkLeq expression
-                    | expression TkGeq expression'''
-    if(p[1] == '!'):
-        p[0] = ('not', p[2])
-    elif(p[1] == '-'):
-        p[0] = ('minus', p[2])
-    elif(p[2]=='+'):
-        p[0] = ('plus', p[1], p[3])
-    elif(p[2]=='*'):
-        p[0] = ('mult', p[1], p[3])
-    elif(p[2]=='-'):
-        p[0] = ('minus', p[1], p[3])
-    elif(p[2]=='=='):
-        p[0] = ('equal', p[1], p[3])
-    elif(p[2]=='<>'):
-        p[0] = ('nequal', p[1], p[3])
-    elif(p[2]=='<='):
-        p[0] = ('leq', p[1], p[3])
-    elif(p[2]=='<'):
-        p[0] = ('less', p[1], p[3])
-    elif(p[2]=='>='):
-        p[0] = ('geq', p[1], p[3])
-    elif(p[2]=='>'):
-        p[0] = ('greater', p[1], p[3])
-    else:
-        p[0] = (p[2], p[1], p[3])
-
+                | expression TkMinus expression
+                | expression TkMult expression'''
+    p[0] = (p[2], p[1], p[3])
 
 def p_expression_app(p):
     '''expression : TkId TkApp expression
                 | function_mod TkApp expression'''
-    p[0] = ("app", "ident: " + p[1], p[3])
+    p[0] = ("app", p[1], p[3])
 
 def p_function_mod(p):
     '''function_mod : TkId function_mod_list'''
-    p[0] = ("write_function", "ident: " + p[1], p[2])
-
+    p[0] = ("write_function", p[1], p[2])
 
 def p_function_mod_list(p):
     '''function_mod_list : function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar 
@@ -206,27 +161,52 @@ def p_function_mod_list(p):
     else:
         p[0] = (p[1], ("two_points", p[3], p[5]))
 
+def p_expression_unop(p):
+    '''expression : TkMinus expression'''
+    p[0] = (p[1], p[2])
 
 def p_expression_num(p):
     '''expression : TkNum'''
-    p[0] = ('literal: ' + p[1])
-
+    p[0] = ('num', p[1])
 
 def p_expression_id(p):
     '''expression : TkId'''
-    p[0] = ('ident: ' + p[1])
-
+    p[0] = ('id', p[1])
 
 def p_expression_parens(p):
     '''expression : TkOpenPar expression TkClosePar'''
     p[0] = p[2]
 
+def p_bool_expression_binop(p):
+    '''bool_expression : bool_expression TkAnd bool_expression
+                    | bool_expression TkOr bool_expression
+                    | bool_expression TkEqual bool_expression
+                    | bool_expression TkNEqual bool_expression
+                    | TkNot bool_expression
+                    | expression TkLess expression
+                    | expression TkGreater expression
+                    | expression TkLeq expression
+                    | expression TkGeq expression
+                    | expression TkEqual expression
+                    | expression TkNEqual expression
+                    '''
+    if(p[1] == '!'):
+        p[0] = (p[1], p[2])
+    else:
+        p[0] = (p[2], p[1], p[3])
 
-def p_expression_def(p):
-    '''expression : TkTrue
+def p_bool_expression_def(p):
+    '''bool_expression : TkTrue
                     | TkFalse'''
-    p[0] = ('literal: ' + p[1])
+    p[0] = ('bool', p[1])
 
+def p_bool_expression_id(p):
+    '''bool_expression : TkId'''
+    p[0] = ('id', p[1])
+
+def p_bool_expression_parenthesis(p):
+    '''bool_expression : TkOpenPar bool_expression TkClosePar'''
+    p[0] = (p[2])
 
 def t_newline(t):
     r'\n+'
@@ -234,25 +214,10 @@ def t_newline(t):
 
 def p_error(p):
     if p:
-        print(f"Sintax error at '{p.value}' (line {p.lineno})")
+        print(f"Error de sintaxis en '{p.value}' (línea {p.lineno})")
     else:
-        print("Sintax error at the end of the file")
-
+        print("Error de sintaxis al final del archivo")
 
 parser = yacc.yacc()
 result = parser.parse(data, lexer=lexer)
 print(result)
-
-def print_ast(node, level=0):
-    indent = "-" * level
-    if isinstance(node, tuple):
-        print(f"{indent}{node[0]}")
-        for child in node[1:]:
-            print_ast(child, level + 1)
-    elif isinstance(node, list):
-        for item in node:
-            print_ast(item, level)
-    else:
-        print(f"{indent}{node}")
-
-print_ast(result)

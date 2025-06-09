@@ -4,8 +4,10 @@
     function[..3] x, y;
 
     x := 2 * 2 + 2;
+    x := y;
+    y := 2;
 
-    if (true and x < 5 or x > 2) --> 
+    if (25 and x < true or x > 2) --> 
         x := 2
     [] !(x==25*25*25) -->
         y := false;

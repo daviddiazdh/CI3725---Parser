@@ -55,7 +55,6 @@ tokens = (
     'TkPlus',
     'TkMinus',
     'TkMult',
-    'TkDiv',
     'TkOr',
     'TkAnd',
     'TkNot',
@@ -145,7 +144,6 @@ def t_TkString(t):
 
 def t_TkNum(t):
     r'[0-9]+'
-    t.value = int(t.value)
     return t
 
 # This is how we manage errors
