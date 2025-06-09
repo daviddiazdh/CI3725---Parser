@@ -37,14 +37,14 @@ precedence = (
 
 def p_program(p):
     '''program : TkOBlock declaration_list TkSemicolon statement_list TkCBlock'''
-    p[0] = ("block", ("declare", p[2]), (p[4]))
+    p[0] = ("Block", ("Declare", p[2]), (p[4]))
 
 
 def p_declaration_list(p):
     '''declaration_list : declaration_list TkSemicolon declaration
                         | declaration'''
     if len(p) == 4:
-        p[0] = ('sequencing', p[1], p[3])
+        p[0] = ('Sequencing', p[1], p[3])
     else:
         p[0] = p[1]   
 
@@ -52,12 +52,12 @@ def p_declaration_list(p):
 def p_declaration(p):
     '''declaration : TkInt variable_list
                     | TkBool variable_list'''
-    p[0] = (p[1], p[2]) 
+    p[0] = (p[2] + ' : ' + p[1]) 
 
 
 def p_declaration_function(p):
     '''declaration : TkFunction TkOBracket TkSoForth TkNum TkCBracket variable_list'''
-    p[0] = (p[1] + '[..literal: ' + str(p[4]) + ']', p[6])
+    p[0] = (p[6] + ' : ' + p[1] + '[..Literal: ' + str(p[4]) + ']')
 
 
 def p_variable_list(p):
@@ -78,7 +78,7 @@ def p_statement_list(p):
     '''statement_list : statement_list TkSemicolon statement
                         | statement'''
     if len(p) == 4:
-        p[0] = ('sequencing', p[1], p[3])
+        p[0] = ('Sequencing', p[1], p[3])
     else:
         p[0] = p[1]
 
@@ -87,53 +87,53 @@ def p_statement_asig(p):
     '''statement : TkId TkAsig expression
                     | TkId TkAsig expression_list
                     | TkId TkAsig function_mod'''
-    p[0] = ("asig", "ident: " + p[1], p[3])
+    p[0] = ("Asig", "Ident: " + p[1], p[3])
 
 
 def p_statement_if(p):
     '''statement : TkIf if_body TkFi'''
-    p[0] = ("if", p[2])
+    p[0] = ("If", p[2])
 
 
 def p_if_body(p):
     '''if_body : if_body TkGuard expression TkArrow statement_list
                 | expression TkArrow statement_list'''
     if(len(p) == 6):
-        p[0] = ("guard", p[1], ("then", p[3], p[5]))
+        p[0] = ("Guard", p[1], ("Then", p[3], p[5]))
     else:
-        p[0] = ("then", p[1], p[3])
+        p[0] = ("Then", p[1], p[3])
 
 
 def p_statement_while(p):
     '''statement : TkWhile expression TkArrow statement_list TkEnd'''
-    p[0] = ("while", ("then", p[2], p[4]))
+    p[0] = ("While", ("Then", p[2], p[4]))
 
 
 def p_statement_print(p):
     '''statement : TkPrint expression
                 | TkPrint string'''
-    p[0] = ("print", p[2])
+    p[0] = ("Print", p[2])
 
 
 def p_statement_skip(p):
     '''statement : TkSkip'''
-    p[0] = (p[1])
+    p[0] = ('Skip')
 
 
 def p_string_binop(p):
     '''string : string TkPlus string
                 | string TkPlus expression
                 | expression TkPlus string'''
-    p[0] = ('plus', p[1], p[3])
+    p[0] = ('Plus', p[1], p[3])
 
 def p_string(p):
     '''string : TkString'''
-    p[0] = ('string: ' + p[1])
+    p[0] = ('String: ' + p[1])
 
 
 def p_string_parenthesis(p):
     '''string : TkOpenPar TkString TkClosePar'''
-    p[0] = ('string: ' + p[2])
+    p[0] = ('String: ' + p[2])
 
 
 def p_statement_program(p):
@@ -145,7 +145,7 @@ def p_expression_list(p):
     '''expression_list : expression_list TkComma expression
                         | expression TkComma expression'''
     if len(p) == 4:
-        p[0] = ("comma", p[1], p[3]) 
+        p[0] = ("Comma", p[1], p[3]) 
 
 
 def p_expression_binop(p):
@@ -163,58 +163,59 @@ def p_expression_binop(p):
                     | expression TkLeq expression
                     | expression TkGeq expression'''
     if(p[1] == '!'):
-        p[0] = ('not', p[2])
+        p[0] = ('Not', p[2])
     elif(p[1] == '-'):
-        p[0] = ('minus', p[2])
+        p[0] = ('Minus', p[2])
     elif(p[2]=='+'):
-        p[0] = ('plus', p[1], p[3])
+        p[0] = ('Plus', p[1], p[3])
     elif(p[2]=='*'):
-        p[0] = ('mult', p[1], p[3])
+        p[0] = ('Mult', p[1], p[3])
     elif(p[2]=='-'):
-        p[0] = ('minus', p[1], p[3])
+        p[0] = ('Minus', p[1], p[3])
     elif(p[2]=='=='):
-        p[0] = ('equal', p[1], p[3])
+        p[0] = ('Equal', p[1], p[3])
     elif(p[2]=='<>'):
-        p[0] = ('nequal', p[1], p[3])
+        p[0] = ('Nequal', p[1], p[3])
     elif(p[2]=='<='):
-        p[0] = ('leq', p[1], p[3])
+        p[0] = ('Leq', p[1], p[3])
     elif(p[2]=='<'):
-        p[0] = ('less', p[1], p[3])
+        p[0] = ('Less', p[1], p[3])
     elif(p[2]=='>='):
-        p[0] = ('geq', p[1], p[3])
+        p[0] = ('Geq', p[1], p[3])
     elif(p[2]=='>'):
-        p[0] = ('greater', p[1], p[3])
-    else:
-        p[0] = (p[2], p[1], p[3])
+        p[0] = ('Greater', p[1], p[3])
+    elif(p[2]=='and'):
+        p[0] = ('And', p[1], p[3])
+    elif(p[2]=='or'):
+        p[0] = ('Or', p[1], p[3])
 
 
 def p_expression_app(p):
     '''expression : TkId TkApp expression
                 | function_mod TkApp expression'''
-    p[0] = ("app", "ident: " + p[1], p[3])
+    p[0] = ("App", "Ident: " + p[1], p[3])
 
 def p_function_mod(p):
-    '''function_mod : TkId function_mod_list'''
-    p[0] = ("write_function", "ident: " + p[1], p[2])
+    '''function_mod : function_mod TkOpenPar two_points TkClosePar'''
+    p[0] = ("WriteFunction", p[1], p[3])
 
+def p_function_mod_base(p):
+    '''function_mod : TkId TkOpenPar two_points TkClosePar'''
+    p[0] = ("WriteFunction", "Ident: " + p[1], p[3])
 
-def p_function_mod_list(p):
-    '''function_mod_list : function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar 
-                        | TkOpenPar expression TkTwoPoints expression TkClosePar'''
-    if(len(p)== 6):
-        p[0] = ("two_points", p[2], p[4])
-    else:
-        p[0] = (p[1], ("two_points", p[3], p[5]))
+def p_two_points(p):
+    '''two_points : expression TkTwoPoints expression'''
+    p[0] = ("TwoPoints", p[1], p[3])
 
 
 def p_expression_num(p):
     '''expression : TkNum'''
-    p[0] = ('literal: ' + p[1])
+    p[0] = ('Literal: ' + p[1])
 
 
 def p_expression_id(p):
     '''expression : TkId'''
-    p[0] = ('ident: ' + p[1])
+    p[0] = ('Ident: ' + p[1])
 
 
 def p_expression_parens(p):
@@ -225,7 +226,7 @@ def p_expression_parens(p):
 def p_expression_def(p):
     '''expression : TkTrue
                     | TkFalse'''
-    p[0] = ('literal: ' + p[1])
+    p[0] = ('Literal: ' + p[1])
 
 
 def t_newline(t):

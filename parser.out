@@ -47,9 +47,9 @@ Rule 41    expression -> expression TkLeq expression
 Rule 42    expression -> expression TkGeq expression
 Rule 43    expression -> TkId TkApp expression
 Rule 44    expression -> function_mod TkApp expression
-Rule 45    function_mod -> TkId function_mod_list
-Rule 46    function_mod_list -> function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar
-Rule 47    function_mod_list -> TkOpenPar expression TkTwoPoints expression TkClosePar
+Rule 45    function_mod -> function_mod TkOpenPar two_points TkClosePar
+Rule 46    function_mod -> TkId TkOpenPar two_points TkClosePar
+Rule 47    two_points -> expression TkTwoPoints expression
 Rule 48    expression -> TkNum
 Rule 49    expression -> TkId
 Rule 50    expression -> TkOpenPar expression TkClosePar
@@ -65,7 +65,7 @@ TkAsig               : 12 13 14
 TkBool               : 5
 TkCBlock             : 1
 TkCBracket           : 6
-TkClosePar           : 26 46 47 50
+TkClosePar           : 26 45 46 50
 TkComma              : 7 28 29
 TkEnd                : 18
 TkEqual              : 35
@@ -75,7 +75,7 @@ TkFunction           : 6
 TkGeq                : 42
 TkGreater            : 40
 TkGuard              : 16
-TkId                 : 9 12 13 14 43 45 49
+TkId                 : 9 12 13 14 43 46 49
 TkIf                 : 15
 TkInt                : 4
 TkLeq                : 41
@@ -87,7 +87,7 @@ TkNot                : 37
 TkNum                : 6 48
 TkOBlock             : 1
 TkOBracket           : 6
-TkOpenPar            : 26 46 47 50
+TkOpenPar            : 26 45 46 50
 TkOr                 : 34
 TkPlus               : 22 23 24 30
 TkPrint              : 19 20
@@ -96,7 +96,7 @@ TkSkip               : 21
 TkSoForth            : 6
 TkString             : 25 26
 TkTrue               : 51
-TkTwoPoints          : 46 47
+TkTwoPoints          : 47
 TkWhile              : 18
 error                : 
 
@@ -104,15 +104,15 @@ Nonterminals, with rules where they appear
 
 declaration          : 2 3
 declaration_list     : 1 2
-expression           : 12 16 17 18 19 23 24 28 29 29 30 30 31 31 32 32 33 33 34 34 35 35 36 36 37 38 39 39 40 40 41 41 42 42 43 44 46 46 47 47 50
+expression           : 12 16 17 18 19 23 24 28 29 29 30 30 31 31 32 32 33 33 34 34 35 35 36 36 37 38 39 39 40 40 41 41 42 42 43 44 47 47 50
 expression_list      : 13 28
-function_mod         : 14 44
-function_mod_list    : 45 46
+function_mod         : 14 44 45
 if_body              : 15 16
 program              : 27 0
 statement            : 10 11
 statement_list       : 1 10 16 17 18
 string               : 20 22 22 23 24
+two_points           : 45 46
 variable             : 7 8
 variable_list        : 4 5 6 7
 
@@ -332,7 +332,8 @@ state 18
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -369,7 +370,8 @@ state 19
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -411,7 +413,8 @@ state 20
     (24) string -> . expression TkPlus string
     (25) string -> . TkString
     (26) string -> . TkOpenPar TkString TkClosePar
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -527,7 +530,8 @@ state 27
     (52) expression -> . TkFalse
     (28) expression_list -> . expression_list TkComma expression
     (29) expression_list -> . expression TkComma expression
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -602,7 +606,8 @@ state 30
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -638,7 +643,8 @@ state 31
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -655,9 +661,7 @@ state 32
 
     (43) expression -> TkId . TkApp expression
     (49) expression -> TkId .
-    (45) function_mod -> TkId . function_mod_list
-    (46) function_mod_list -> . function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar
-    (47) function_mod_list -> . TkOpenPar expression TkTwoPoints expression TkClosePar
+    (46) function_mod -> TkId . TkOpenPar two_points TkClosePar
 
     TkApp           shift and go to state 65
     TkArrow         reduce using rule 49 (expression -> TkId .)
@@ -680,15 +684,16 @@ state 32
     TkComma         reduce using rule 49 (expression -> TkId .)
     TkClosePar      reduce using rule 49 (expression -> TkId .)
     TkTwoPoints     reduce using rule 49 (expression -> TkId .)
-    TkOpenPar       shift and go to state 67
+    TkOpenPar       shift and go to state 66
 
-    function_mod_list              shift and go to state 66
 
 state 33
 
     (44) expression -> function_mod . TkApp expression
+    (45) function_mod -> function_mod . TkOpenPar two_points TkClosePar
 
-    TkApp           shift and go to state 68
+    TkApp           shift and go to state 67
+    TkOpenPar       shift and go to state 68
 
 
 state 34
@@ -740,7 +745,8 @@ state 35
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -906,7 +912,8 @@ state 41
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkString        shift and go to state 73
     TkNot           shift and go to state 31
@@ -1010,13 +1017,15 @@ state 48
 
     (14) statement -> TkId TkAsig function_mod .
     (44) expression -> function_mod . TkApp expression
+    (45) function_mod -> function_mod . TkOpenPar two_points TkClosePar
 
     TkCBlock        reduce using rule 14 (statement -> TkId TkAsig function_mod .)
     TkSemicolon     reduce using rule 14 (statement -> TkId TkAsig function_mod .)
     TkFi            reduce using rule 14 (statement -> TkId TkAsig function_mod .)
     TkGuard         reduce using rule 14 (statement -> TkId TkAsig function_mod .)
     TkEnd           reduce using rule 14 (statement -> TkId TkAsig function_mod .)
-    TkApp           shift and go to state 68
+    TkApp           shift and go to state 67
+    TkOpenPar       shift and go to state 68
 
 
 state 49
@@ -1053,7 +1062,8 @@ state 50
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1116,7 +1126,8 @@ state 52
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1152,7 +1163,8 @@ state 53
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1188,7 +1200,8 @@ state 54
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1224,7 +1237,8 @@ state 55
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1260,7 +1274,8 @@ state 56
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1296,7 +1311,8 @@ state 57
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1332,7 +1348,8 @@ state 58
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1368,7 +1385,8 @@ state 59
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1404,7 +1422,8 @@ state 60
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1440,7 +1459,8 @@ state 61
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1476,7 +1496,8 @@ state 62
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1610,7 +1631,8 @@ state 65
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1625,21 +1647,8 @@ state 65
 
 state 66
 
-    (45) function_mod -> TkId function_mod_list .
-    (46) function_mod_list -> function_mod_list . TkOpenPar expression TkTwoPoints expression TkClosePar
-
-    TkApp           reduce using rule 45 (function_mod -> TkId function_mod_list .)
-    TkCBlock        reduce using rule 45 (function_mod -> TkId function_mod_list .)
-    TkSemicolon     reduce using rule 45 (function_mod -> TkId function_mod_list .)
-    TkFi            reduce using rule 45 (function_mod -> TkId function_mod_list .)
-    TkGuard         reduce using rule 45 (function_mod -> TkId function_mod_list .)
-    TkEnd           reduce using rule 45 (function_mod -> TkId function_mod_list .)
-    TkOpenPar       shift and go to state 91
-
-
-state 67
-
-    (47) function_mod_list -> TkOpenPar . expression TkTwoPoints expression TkClosePar
+    (46) function_mod -> TkId TkOpenPar . two_points TkClosePar
+    (47) two_points -> . expression TkTwoPoints expression
     (30) expression -> . expression TkPlus expression
     (31) expression -> . expression TkMinus expression
     (32) expression -> . expression TkMult expression
@@ -1660,7 +1669,8 @@ state 67
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1670,10 +1680,11 @@ state 67
     TkTrue          shift and go to state 36
     TkFalse         shift and go to state 37
 
+    two_points                     shift and go to state 91
     expression                     shift and go to state 92
     function_mod                   shift and go to state 33
 
-state 68
+state 67
 
     (44) expression -> function_mod TkApp . expression
     (30) expression -> . expression TkPlus expression
@@ -1696,7 +1707,8 @@ state 68
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1708,6 +1720,45 @@ state 68
 
     function_mod                   shift and go to state 33
     expression                     shift and go to state 93
+
+state 68
+
+    (45) function_mod -> function_mod TkOpenPar . two_points TkClosePar
+    (47) two_points -> . expression TkTwoPoints expression
+    (30) expression -> . expression TkPlus expression
+    (31) expression -> . expression TkMinus expression
+    (32) expression -> . expression TkMult expression
+    (33) expression -> . expression TkAnd expression
+    (34) expression -> . expression TkOr expression
+    (35) expression -> . expression TkEqual expression
+    (36) expression -> . expression TkNEqual expression
+    (37) expression -> . TkNot expression
+    (38) expression -> . TkMinus expression
+    (39) expression -> . expression TkLess expression
+    (40) expression -> . expression TkGreater expression
+    (41) expression -> . expression TkLeq expression
+    (42) expression -> . expression TkGeq expression
+    (43) expression -> . TkId TkApp expression
+    (44) expression -> . function_mod TkApp expression
+    (48) expression -> . TkNum
+    (49) expression -> . TkId
+    (50) expression -> . TkOpenPar expression TkClosePar
+    (51) expression -> . TkTrue
+    (52) expression -> . TkFalse
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
+
+    TkNot           shift and go to state 31
+    TkMinus         shift and go to state 30
+    TkId            shift and go to state 32
+    TkNum           shift and go to state 34
+    TkOpenPar       shift and go to state 35
+    TkTrue          shift and go to state 36
+    TkFalse         shift and go to state 37
+
+    function_mod                   shift and go to state 33
+    two_points                     shift and go to state 94
+    expression                     shift and go to state 92
 
 state 69
 
@@ -1724,7 +1775,7 @@ state 69
     (41) expression -> expression . TkLeq expression
     (42) expression -> expression . TkGeq expression
 
-    TkClosePar      shift and go to state 94
+    TkClosePar      shift and go to state 95
     TkPlus          shift and go to state 52
     TkMinus         shift and go to state 53
     TkMult          shift and go to state 54
@@ -1761,7 +1812,7 @@ state 70
     TkSkip          shift and go to state 21
     TkOBlock        shift and go to state 2
 
-    statement_list                 shift and go to state 95
+    statement_list                 shift and go to state 96
     statement                      shift and go to state 16
     program                        shift and go to state 22
 
@@ -1794,7 +1845,8 @@ state 71
     (24) string -> . expression TkPlus string
     (25) string -> . TkString
     (26) string -> . TkOpenPar TkString TkClosePar
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1805,8 +1857,8 @@ state 71
     TkFalse         shift and go to state 37
     TkString        shift and go to state 42
 
-    expression                     shift and go to state 96
-    string                         shift and go to state 97
+    expression                     shift and go to state 97
+    string                         shift and go to state 98
     function_mod                   shift and go to state 33
 
 state 72
@@ -1838,10 +1890,11 @@ state 72
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkString        shift and go to state 42
-    TkOpenPar       shift and go to state 100
+    TkOpenPar       shift and go to state 101
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
     TkId            shift and go to state 32
@@ -1849,15 +1902,15 @@ state 72
     TkTrue          shift and go to state 36
     TkFalse         shift and go to state 37
 
-    string                         shift and go to state 98
-    expression                     shift and go to state 99
+    string                         shift and go to state 99
+    expression                     shift and go to state 100
     function_mod                   shift and go to state 33
 
 state 73
 
     (26) string -> TkOpenPar TkString . TkClosePar
 
-    TkClosePar      shift and go to state 101
+    TkClosePar      shift and go to state 102
 
 
 state 74
@@ -1869,7 +1922,7 @@ state 74
 
     TkId            shift and go to state 11
 
-    variable_list                  shift and go to state 102
+    variable_list                  shift and go to state 103
     variable                       shift and go to state 10
 
 state 75
@@ -1895,7 +1948,8 @@ state 75
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1905,7 +1959,7 @@ state 75
     TkTrue          shift and go to state 36
     TkFalse         shift and go to state 37
 
-    expression                     shift and go to state 103
+    expression                     shift and go to state 104
     function_mod                   shift and go to state 33
 
 state 76
@@ -1931,7 +1985,8 @@ state 76
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -1941,7 +1996,7 @@ state 76
     TkTrue          shift and go to state 36
     TkFalse         shift and go to state 37
 
-    expression                     shift and go to state 104
+    expression                     shift and go to state 105
     function_mod                   shift and go to state 33
 
 state 77
@@ -1959,7 +2014,7 @@ state 77
     (41) expression -> expression . TkLeq expression
     (42) expression -> expression . TkGeq expression
 
-    TkArrow         shift and go to state 105
+    TkArrow         shift and go to state 106
     TkPlus          shift and go to state 52
     TkMinus         shift and go to state 53
     TkMult          shift and go to state 54
@@ -2573,43 +2628,14 @@ state 90
 
 state 91
 
-    (46) function_mod_list -> function_mod_list TkOpenPar . expression TkTwoPoints expression TkClosePar
-    (30) expression -> . expression TkPlus expression
-    (31) expression -> . expression TkMinus expression
-    (32) expression -> . expression TkMult expression
-    (33) expression -> . expression TkAnd expression
-    (34) expression -> . expression TkOr expression
-    (35) expression -> . expression TkEqual expression
-    (36) expression -> . expression TkNEqual expression
-    (37) expression -> . TkNot expression
-    (38) expression -> . TkMinus expression
-    (39) expression -> . expression TkLess expression
-    (40) expression -> . expression TkGreater expression
-    (41) expression -> . expression TkLeq expression
-    (42) expression -> . expression TkGeq expression
-    (43) expression -> . TkId TkApp expression
-    (44) expression -> . function_mod TkApp expression
-    (48) expression -> . TkNum
-    (49) expression -> . TkId
-    (50) expression -> . TkOpenPar expression TkClosePar
-    (51) expression -> . TkTrue
-    (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (46) function_mod -> TkId TkOpenPar two_points . TkClosePar
 
-    TkNot           shift and go to state 31
-    TkMinus         shift and go to state 30
-    TkId            shift and go to state 32
-    TkNum           shift and go to state 34
-    TkOpenPar       shift and go to state 35
-    TkTrue          shift and go to state 36
-    TkFalse         shift and go to state 37
+    TkClosePar      shift and go to state 107
 
-    expression                     shift and go to state 106
-    function_mod                   shift and go to state 33
 
 state 92
 
-    (47) function_mod_list -> TkOpenPar expression . TkTwoPoints expression TkClosePar
+    (47) two_points -> expression . TkTwoPoints expression
     (30) expression -> expression . TkPlus expression
     (31) expression -> expression . TkMinus expression
     (32) expression -> expression . TkMult expression
@@ -2622,7 +2648,7 @@ state 92
     (41) expression -> expression . TkLeq expression
     (42) expression -> expression . TkGeq expression
 
-    TkTwoPoints     shift and go to state 107
+    TkTwoPoints     shift and go to state 108
     TkPlus          shift and go to state 52
     TkMinus         shift and go to state 53
     TkMult          shift and go to state 54
@@ -2687,6 +2713,13 @@ state 93
 
 state 94
 
+    (45) function_mod -> function_mod TkOpenPar two_points . TkClosePar
+
+    TkClosePar      shift and go to state 109
+
+
+state 95
+
     (50) expression -> TkOpenPar expression TkClosePar .
 
     TkArrow         reduce using rule 50 (expression -> TkOpenPar expression TkClosePar .)
@@ -2711,16 +2744,16 @@ state 94
     TkTwoPoints     reduce using rule 50 (expression -> TkOpenPar expression TkClosePar .)
 
 
-state 95
+state 96
 
     (18) statement -> TkWhile expression TkArrow statement_list . TkEnd
     (10) statement_list -> statement_list . TkSemicolon statement
 
-    TkEnd           shift and go to state 108
+    TkEnd           shift and go to state 110
     TkSemicolon     shift and go to state 25
 
 
-state 96
+state 97
 
     (30) expression -> expression TkPlus expression .
     (30) expression -> expression . TkPlus expression
@@ -2766,7 +2799,7 @@ state 96
   ! TkGeq           [ shift and go to state 62 ]
 
 
-state 97
+state 98
 
     (24) string -> expression TkPlus string .
     (22) string -> string . TkPlus string
@@ -2782,7 +2815,7 @@ state 97
   ! TkPlus          [ shift and go to state 72 ]
 
 
-state 98
+state 99
 
     (22) string -> string TkPlus string .
     (22) string -> string . TkPlus string
@@ -2798,7 +2831,7 @@ state 98
   ! TkPlus          [ shift and go to state 72 ]
 
 
-state 99
+state 100
 
     (23) string -> string TkPlus expression .
     (24) string -> expression . TkPlus string
@@ -2831,10 +2864,10 @@ state 99
     TkLeq           shift and go to state 61
     TkGeq           shift and go to state 62
 
-  ! TkPlus          [ shift and go to state 109 ]
+  ! TkPlus          [ shift and go to state 111 ]
 
 
-state 100
+state 101
 
     (26) string -> TkOpenPar . TkString TkClosePar
     (50) expression -> TkOpenPar . expression TkClosePar
@@ -2858,7 +2891,8 @@ state 100
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkString        shift and go to state 73
     TkNot           shift and go to state 31
@@ -2872,7 +2906,7 @@ state 100
     expression                     shift and go to state 69
     function_mod                   shift and go to state 33
 
-state 101
+state 102
 
     (26) string -> TkOpenPar TkString TkClosePar .
 
@@ -2884,7 +2918,7 @@ state 101
     TkEnd           reduce using rule 26 (string -> TkOpenPar TkString TkClosePar .)
 
 
-state 102
+state 103
 
     (6) declaration -> TkFunction TkOBracket TkSoForth TkNum TkCBracket variable_list .
     (7) variable_list -> variable_list . TkComma variable
@@ -2893,7 +2927,7 @@ state 102
     TkComma         shift and go to state 23
 
 
-state 103
+state 104
 
     (29) expression_list -> expression TkComma expression .
     (30) expression -> expression . TkPlus expression
@@ -2927,7 +2961,7 @@ state 103
     TkGeq           shift and go to state 62
 
 
-state 104
+state 105
 
     (28) expression_list -> expression_list TkComma expression .
     (30) expression -> expression . TkPlus expression
@@ -2961,7 +2995,7 @@ state 104
     TkGeq           shift and go to state 62
 
 
-state 105
+state 106
 
     (16) if_body -> if_body TkGuard expression TkArrow . statement_list
     (10) statement_list -> . statement_list TkSemicolon statement
@@ -2984,42 +3018,26 @@ state 105
     TkSkip          shift and go to state 21
     TkOBlock        shift and go to state 2
 
-    statement_list                 shift and go to state 110
+    statement_list                 shift and go to state 112
     statement                      shift and go to state 16
     program                        shift and go to state 22
 
-state 106
-
-    (46) function_mod_list -> function_mod_list TkOpenPar expression . TkTwoPoints expression TkClosePar
-    (30) expression -> expression . TkPlus expression
-    (31) expression -> expression . TkMinus expression
-    (32) expression -> expression . TkMult expression
-    (33) expression -> expression . TkAnd expression
-    (34) expression -> expression . TkOr expression
-    (35) expression -> expression . TkEqual expression
-    (36) expression -> expression . TkNEqual expression
-    (39) expression -> expression . TkLess expression
-    (40) expression -> expression . TkGreater expression
-    (41) expression -> expression . TkLeq expression
-    (42) expression -> expression . TkGeq expression
-
-    TkTwoPoints     shift and go to state 111
-    TkPlus          shift and go to state 52
-    TkMinus         shift and go to state 53
-    TkMult          shift and go to state 54
-    TkAnd           shift and go to state 55
-    TkOr            shift and go to state 56
-    TkEqual         shift and go to state 57
-    TkNEqual        shift and go to state 58
-    TkLess          shift and go to state 59
-    TkGreater       shift and go to state 60
-    TkLeq           shift and go to state 61
-    TkGeq           shift and go to state 62
-
-
 state 107
 
-    (47) function_mod_list -> TkOpenPar expression TkTwoPoints . expression TkClosePar
+    (46) function_mod -> TkId TkOpenPar two_points TkClosePar .
+
+    TkApp           reduce using rule 46 (function_mod -> TkId TkOpenPar two_points TkClosePar .)
+    TkOpenPar       reduce using rule 46 (function_mod -> TkId TkOpenPar two_points TkClosePar .)
+    TkCBlock        reduce using rule 46 (function_mod -> TkId TkOpenPar two_points TkClosePar .)
+    TkSemicolon     reduce using rule 46 (function_mod -> TkId TkOpenPar two_points TkClosePar .)
+    TkFi            reduce using rule 46 (function_mod -> TkId TkOpenPar two_points TkClosePar .)
+    TkGuard         reduce using rule 46 (function_mod -> TkId TkOpenPar two_points TkClosePar .)
+    TkEnd           reduce using rule 46 (function_mod -> TkId TkOpenPar two_points TkClosePar .)
+
+
+state 108
+
+    (47) two_points -> expression TkTwoPoints . expression
     (30) expression -> . expression TkPlus expression
     (31) expression -> . expression TkMinus expression
     (32) expression -> . expression TkMult expression
@@ -3040,7 +3058,8 @@ state 107
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
@@ -3050,10 +3069,23 @@ state 107
     TkTrue          shift and go to state 36
     TkFalse         shift and go to state 37
 
-    expression                     shift and go to state 112
+    expression                     shift and go to state 113
     function_mod                   shift and go to state 33
 
-state 108
+state 109
+
+    (45) function_mod -> function_mod TkOpenPar two_points TkClosePar .
+
+    TkApp           reduce using rule 45 (function_mod -> function_mod TkOpenPar two_points TkClosePar .)
+    TkOpenPar       reduce using rule 45 (function_mod -> function_mod TkOpenPar two_points TkClosePar .)
+    TkCBlock        reduce using rule 45 (function_mod -> function_mod TkOpenPar two_points TkClosePar .)
+    TkSemicolon     reduce using rule 45 (function_mod -> function_mod TkOpenPar two_points TkClosePar .)
+    TkFi            reduce using rule 45 (function_mod -> function_mod TkOpenPar two_points TkClosePar .)
+    TkGuard         reduce using rule 45 (function_mod -> function_mod TkOpenPar two_points TkClosePar .)
+    TkEnd           reduce using rule 45 (function_mod -> function_mod TkOpenPar two_points TkClosePar .)
+
+
+state 110
 
     (18) statement -> TkWhile expression TkArrow statement_list TkEnd .
 
@@ -3064,7 +3096,7 @@ state 108
     TkEnd           reduce using rule 18 (statement -> TkWhile expression TkArrow statement_list TkEnd .)
 
 
-state 109
+state 111
 
     (24) string -> expression TkPlus . string
     (30) expression -> expression TkPlus . expression
@@ -3093,10 +3125,11 @@ state 109
     (50) expression -> . TkOpenPar expression TkClosePar
     (51) expression -> . TkTrue
     (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
+    (45) function_mod -> . function_mod TkOpenPar two_points TkClosePar
+    (46) function_mod -> . TkId TkOpenPar two_points TkClosePar
 
     TkString        shift and go to state 42
-    TkOpenPar       shift and go to state 100
+    TkOpenPar       shift and go to state 101
     TkNot           shift and go to state 31
     TkMinus         shift and go to state 30
     TkId            shift and go to state 32
@@ -3104,11 +3137,11 @@ state 109
     TkTrue          shift and go to state 36
     TkFalse         shift and go to state 37
 
-    expression                     shift and go to state 113
-    string                         shift and go to state 97
+    expression                     shift and go to state 114
+    string                         shift and go to state 98
     function_mod                   shift and go to state 33
 
-state 110
+state 112
 
     (16) if_body -> if_body TkGuard expression TkArrow statement_list .
     (10) statement_list -> statement_list . TkSemicolon statement
@@ -3118,45 +3151,9 @@ state 110
     TkSemicolon     shift and go to state 25
 
 
-state 111
+state 113
 
-    (46) function_mod_list -> function_mod_list TkOpenPar expression TkTwoPoints . expression TkClosePar
-    (30) expression -> . expression TkPlus expression
-    (31) expression -> . expression TkMinus expression
-    (32) expression -> . expression TkMult expression
-    (33) expression -> . expression TkAnd expression
-    (34) expression -> . expression TkOr expression
-    (35) expression -> . expression TkEqual expression
-    (36) expression -> . expression TkNEqual expression
-    (37) expression -> . TkNot expression
-    (38) expression -> . TkMinus expression
-    (39) expression -> . expression TkLess expression
-    (40) expression -> . expression TkGreater expression
-    (41) expression -> . expression TkLeq expression
-    (42) expression -> . expression TkGeq expression
-    (43) expression -> . TkId TkApp expression
-    (44) expression -> . function_mod TkApp expression
-    (48) expression -> . TkNum
-    (49) expression -> . TkId
-    (50) expression -> . TkOpenPar expression TkClosePar
-    (51) expression -> . TkTrue
-    (52) expression -> . TkFalse
-    (45) function_mod -> . TkId function_mod_list
-
-    TkNot           shift and go to state 31
-    TkMinus         shift and go to state 30
-    TkId            shift and go to state 32
-    TkNum           shift and go to state 34
-    TkOpenPar       shift and go to state 35
-    TkTrue          shift and go to state 36
-    TkFalse         shift and go to state 37
-
-    expression                     shift and go to state 114
-    function_mod                   shift and go to state 33
-
-state 112
-
-    (47) function_mod_list -> TkOpenPar expression TkTwoPoints expression . TkClosePar
+    (47) two_points -> expression TkTwoPoints expression .
     (30) expression -> expression . TkPlus expression
     (31) expression -> expression . TkMinus expression
     (32) expression -> expression . TkMult expression
@@ -3169,7 +3166,7 @@ state 112
     (41) expression -> expression . TkLeq expression
     (42) expression -> expression . TkGeq expression
 
-    TkClosePar      shift and go to state 115
+    TkClosePar      reduce using rule 47 (two_points -> expression TkTwoPoints expression .)
     TkPlus          shift and go to state 52
     TkMinus         shift and go to state 53
     TkMult          shift and go to state 54
@@ -3183,7 +3180,7 @@ state 112
     TkGeq           shift and go to state 62
 
 
-state 113
+state 114
 
     (30) expression -> expression TkPlus expression .
     (24) string -> expression . TkPlus string
@@ -3217,7 +3214,7 @@ state 113
     TkMult          shift and go to state 54
 
   ! TkMult          [ reduce using rule 30 (expression -> expression TkPlus expression .) ]
-  ! TkPlus          [ shift and go to state 109 ]
+  ! TkPlus          [ shift and go to state 111 ]
   ! TkMinus         [ shift and go to state 53 ]
   ! TkAnd           [ shift and go to state 55 ]
   ! TkOr            [ shift and go to state 56 ]
@@ -3227,59 +3224,4 @@ state 113
   ! TkGreater       [ shift and go to state 60 ]
   ! TkLeq           [ shift and go to state 61 ]
   ! TkGeq           [ shift and go to state 62 ]
-
-
-state 114
-
-    (46) function_mod_list -> function_mod_list TkOpenPar expression TkTwoPoints expression . TkClosePar
-    (30) expression -> expression . TkPlus expression
-    (31) expression -> expression . TkMinus expression
-    (32) expression -> expression . TkMult expression
-    (33) expression -> expression . TkAnd expression
-    (34) expression -> expression . TkOr expression
-    (35) expression -> expression . TkEqual expression
-    (36) expression -> expression . TkNEqual expression
-    (39) expression -> expression . TkLess expression
-    (40) expression -> expression . TkGreater expression
-    (41) expression -> expression . TkLeq expression
-    (42) expression -> expression . TkGeq expression
-
-    TkClosePar      shift and go to state 116
-    TkPlus          shift and go to state 52
-    TkMinus         shift and go to state 53
-    TkMult          shift and go to state 54
-    TkAnd           shift and go to state 55
-    TkOr            shift and go to state 56
-    TkEqual         shift and go to state 57
-    TkNEqual        shift and go to state 58
-    TkLess          shift and go to state 59
-    TkGreater       shift and go to state 60
-    TkLeq           shift and go to state 61
-    TkGeq           shift and go to state 62
-
-
-state 115
-
-    (47) function_mod_list -> TkOpenPar expression TkTwoPoints expression TkClosePar .
-
-    TkOpenPar       reduce using rule 47 (function_mod_list -> TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkApp           reduce using rule 47 (function_mod_list -> TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkCBlock        reduce using rule 47 (function_mod_list -> TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkSemicolon     reduce using rule 47 (function_mod_list -> TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkFi            reduce using rule 47 (function_mod_list -> TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkGuard         reduce using rule 47 (function_mod_list -> TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkEnd           reduce using rule 47 (function_mod_list -> TkOpenPar expression TkTwoPoints expression TkClosePar .)
-
-
-state 116
-
-    (46) function_mod_list -> function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar .
-
-    TkOpenPar       reduce using rule 46 (function_mod_list -> function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkApp           reduce using rule 46 (function_mod_list -> function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkCBlock        reduce using rule 46 (function_mod_list -> function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkSemicolon     reduce using rule 46 (function_mod_list -> function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkFi            reduce using rule 46 (function_mod_list -> function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkGuard         reduce using rule 46 (function_mod_list -> function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar .)
-    TkEnd           reduce using rule 46 (function_mod_list -> function_mod_list TkOpenPar expression TkTwoPoints expression TkClosePar .)
 
