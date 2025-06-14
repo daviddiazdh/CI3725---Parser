@@ -1,0 +1,70 @@
+program
+
+program -> TkOBlock declarationList TkSemicolon statementList TkCBlock
+
+declarationList -> declarationList TkSemiColon declaration
+		 | declaration
+
+declaration -> 	TkInt variableList
+	     |	TkBool variableList
+	     | 	TkFunction TkOBracket TkSoForth TkNum TkCBracket variableList
+
+
+variableList -> variableList TkComma variable
+	      |	variable
+
+variable -> TkId
+
+statementList -> statementList TkSemicolon statement
+	       | statement
+
+
+statement -> TkId TkAsig expression
+	   | TkId TkAsig expressionList
+	   | TkId TkAsig functionMod
+	   | TkIf ifBody TkFi
+	   | TkWhile expression TkArrow statementList TkEnd
+	   | TkPrint expression
+	   | TkPrint string
+	   | TkSkip
+	   | Program
+
+ifBody -> ifBody TkGuard expression TkArrow statementList
+	| expression TkArrow statementList
+
+
+string -> string TkPlus string
+	| string TkPlus expression
+	| expression TkPlus string
+	| TkString
+	| TkOpenPar TkString TkClosePar
+
+expressionList -> expressionList TkComma expression
+		| expression TkComma expression
+
+expression -> expression TkPlus expression
+	    | expression TkMinus expression
+	    | expression TkMult expression
+	    | expression TkAnd expression
+	    | expression TkOr expression
+	    | expression TkEqual expression
+	    | expression TkNEqual expression
+	    | TkNot expression
+	    | TkMinus expression
+	    | expression TkLess expression
+	    | expression TkGreater expression
+	    | expression TkLeq expression
+	    | expression TkGeq expression
+	    | TkId TkApp expression
+	    | functionMod TkApp expression
+	    | TkNum
+	    | TkId
+	    | TkOpenPar expression TkClosePar
+	    | TkTrue
+	    | TkFalse
+
+
+functionMod -> functionMod TkOpenPar twoPoints TkClosePar
+	     | TkId TkOpenPar twoPoints TkClosePar
+
+twoPoints -> expression TkTwoPoints expression
