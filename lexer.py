@@ -167,13 +167,3 @@ if errors:
         print(e)
     recognized_tokens=[]
 # If errors array is empty, then we print tokens
-else:
-    for tok in recognized_tokens:
-        col = find_column(data, tok)
-        if(tok.type == "TkNum" or tok.type == "TkId" or tok.type == "TkString"):
-            if(tok.type == "TkId"):
-                print(f'{tok.type}("{tok.value}") {tok.lineno} {col}')
-            else:
-                print(f"{tok.type}({tok.value}) {tok.lineno} {col}")
-        else:
-            print(f"{tok.type} {tok.lineno} {col}")

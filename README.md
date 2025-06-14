@@ -19,3 +19,21 @@ python lexer.py [file]
 ```
 
 - [file] has to be a .imperat file
+
+
+
+## 👓 Second Step: Parse
+
+The **Parser** is the module responsible for determine the grammar and identify codes which satisfy this grammar. It outputs either:
+- A structural tree code, or
+- A list of grammar errors
+
+> ⚠️ This step is **essential** for all subsequent stages of the parser.
+
+### 📦 Usage
+
+```bash
+python parser.py [file]
+```
+
+- [file] has to be a .imperat file
