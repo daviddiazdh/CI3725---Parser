@@ -30,6 +30,9 @@ if not re.fullmatch(pattern, file):
 with open(file, "r") as f:
     data = f.read()
 
+# precedence is a special object of yacc parser which is used to
+# determine what operation goes first, besides that, it also determines
+# operators' associativity direction 
 precedence = (
     ('left', 'TkOr'),
     ('left', 'TkAnd'),
@@ -245,7 +248,7 @@ def p_expression_def(p):
                     | TkFalse'''
     p[0] = ('Literal: ' + p[1])
 
-
+# Function to calculate new line
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
@@ -269,6 +272,8 @@ def p_error(p):
 parser = yacc.yacc()
 result = parser.parse(data, lexer=lexer)
 
+# This function gets the result tree from yacc parser
+# and returns tree in format required
 def print_ast(node, level=0):
     indent = "-" * level
     if isinstance(node, tuple):
@@ -278,6 +283,7 @@ def print_ast(node, level=0):
     else:
         print(f"{indent}{node}")
 
+# In case of errors, we don't print the tree
 if errors:
     for e in errors:
         print(e)
