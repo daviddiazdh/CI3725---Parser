@@ -1,31 +1,21 @@
 {
-    int a, x;
-    bool y;
-    function[..3] x, y;
-
-    x := 2 * 2 + 2;
-    x := y;
-    y := 2;
+    int a, b, c, x;
+    bool d, e, f;
+    function[..3] A, B;
+    a := b * 4 + 2;
     
-    if (25 and x < true or x > 2) --> 
-        x := 2
-    [] !(x==25*25*25) -->
-        y := false;
-        z := 2*25 + 2
-    [] true -->
-        {
-            int a;
-            a := 1
-        }
-    fi;
+    d := true;
+    A := A.25, 3, 3, 4;
+    A := A(4:2)(1:1);
 
-    while i < 2 --> 
-        while j < 3 --> 
-            y := 3
-        end;
-        x := true;
-        print 2 + 2 + "Hola, tu edad es:" + ", crack.\n"
-    end
+    {
+        int y, q;
+        y := q
+    };
+
+    print "Hola" + 2;
+
+    if !!!!!d == false -->
+        b := 2
+    fi
 }
-
-

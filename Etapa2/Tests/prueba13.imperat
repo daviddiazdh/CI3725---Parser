@@ -2,9 +2,9 @@
     int a, b, c, x;
     bool d, e, f;
     function[..3] A;
-    a := b+2*3 - -3*2;
+    a := b+2;
     d := false;
-    A := A(0+a:b).2 <= !!b;
+    A := 2, a, c, x;
     print "\"hola mundo \" \n" + 3 + A(0+a:b).2;
     while true -->
       if true -->
