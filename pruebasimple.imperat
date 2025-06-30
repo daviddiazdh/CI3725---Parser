@@ -1,21 +1,7 @@
 {
-    int a, b, c, x;
-    bool d, e, f;
-    function[..3] A, B;
-    a := b * 4 + 2;
-    
-    d := true;
-    A := A.25, 3, 3, 4;
-    A := A(4:2)(1:1);
+    int a,b;
+    function[..4] A;
 
-    {
-        int y, q;
-        y := q
-    };
+    A := A(2+a:b).2 <= -b
 
-    print "Hola" + 2;
-
-    if !!!!!d == false -->
-        b := 2
-    fi
 }
