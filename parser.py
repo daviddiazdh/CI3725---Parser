@@ -188,7 +188,7 @@ def p_statement_asig(p):
     var_type = current_scope.lookup(p[1])
 
     if(var_type and var_type != expression_type):
-        errors.append(f"Type error. Variable '{p[1]}' has different type than expression at line {p.lineno(1)} and column {find_column(data, p.slice[1])} ")
+        errors.append(f"Type error. Variable '{p[1]}' has different type than expression at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
     elif(not(var_type)):
         errors.append(f"Error: '{p[1]}' non declared")
     
