@@ -100,7 +100,7 @@ def p_program(p):
     if len(p) == 6:
         p[0] = ("Block", ("Symbols Table", current_scope), p[4])
     else:
-        p[0] = ("Block", p[2])
+        p[0] = ("Block", ("Symbols Table"), p[2])
 
     if block_counter != 1:
         current_scope = current_scope.parent
@@ -135,7 +135,7 @@ def p_declaration(p):
     variables_list = p[2].split(', ')
     for var in variables_list:
         if not(current_scope.declare(var, tipo)):
-            errors.append(f"Already declared token ’{var}’.")
+            errors.append(f"Variable ’{var}’ is already declared in the block at line {p.lineno(1)}")
             
     # if p[1] == 'int':
     #     p[0] = (p[2] + ': int', p[1])
@@ -151,7 +151,7 @@ def p_declaration_function(p):
     variables_list = p[6].split(', ')
     for var in variables_list:
         if not(current_scope.declare(var, tipo)):
-            errors.append(f"Already declared token ’{var}’.")
+            errors.append(f"Variable ’{var}’ is already declared in the block at line {p.lineno(1)}")
 
     p[0] = (p[6] + ' : ' + p[1] + '[..Literal: ' + str(p[4]) + ']')
 
@@ -188,12 +188,14 @@ def p_statement_asig(p):
     var_type = current_scope.lookup(p[1])
 
     if(var_type and var_type != expression_type):
-        errors.append(f"Type error. Variable '{p[1]}' has different type than expression at line {p.lineno(1)} and column {find_column(data, p.slice[1])} ")
+        if (var_type[0] != "function" or var_type[1] != 1 or expression_type != "int"):
+            errors.append(f"Type error. Variable {p[1]} has different type than expression at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+
     elif(not(var_type)):
-        errors.append(f"Error: '{p[1]}' non declared")
+        errors.append(f"Variable {p[1]} not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
     
 
-    p[0] = ("Asig", ("Ident", p[1], expression_type), p[3])
+    p[0] = ("Asig", ("Ident", p[1], var_type), p[3])
 
 
 def p_statement_if(p):
@@ -204,16 +206,29 @@ def p_statement_if(p):
 def p_if_body(p):
     '''if_body : if_body TkGuard expression TkArrow statement_list
                 | expression TkArrow statement_list'''
-    if(len(p) == 6):
+    
+
+    if(len(p) == 6):        
+        if (p[3][-1] != "bool"):
+            errors.append(f"No boolean guard at line {p.lineno(4)} and column {find_column(data, p.slice[4])}")
+        
         p[0] = ("Guard", p[1], ("Then", p[3], p[5]))
+
     else:
+        if (p[1][-1] != "bool"):
+            errors.append(f"No boolean guard at line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+        
         p[0] = ("Then", p[1], p[3])
+
+        
 
 
 def p_statement_while(p):
     '''statement : TkWhile expression TkArrow statement_list TkEnd'''
-    p[0] = ("While", ("Then", p[2], p[4]))
-
+    if (p[2][-1] != "bool"):
+        errors.append(f"No boolean guard at line {p.lineno(3)} and column {find_column(data, p.slice[3])}")
+    
+    p[0] = ("While", ("Then", p[2], p[4]))   
 
 def p_statement_print(p):
     '''statement : TkPrint expression
@@ -253,7 +268,7 @@ def p_expression_list(p):
     if p[1][0] == "Comma":
 
         if p[3][-1] != "int":
-            errors.append(f"Error: Can't accept non integers values in function declaration")
+            errors.append(f"There is no integer list at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
         p[0] = ("Comma", p[1], p[3], ("function", p[1][-1][1] + 1))
 
     else:
@@ -280,94 +295,74 @@ def p_expression_binop(p):
     if(p[2]=='+'):
     
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Can't use '+' between non integers operands.")
-            p[0] = ('Plus', p[1], p[3], 'error')
-        else:
-            p[0] = ('Plus', p[1], p[3], 'int')
+            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+        p[0] = ('Plus', p[1], p[3], 'int')
 
     elif(p[2]=='*'):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Can't use '*' between non integers operands.")
-            p[0] = ('Mult', p[1], p[3], 'error')
-        else:
-            p[0] = ('Mult', p[1], p[3], 'int')
+            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+        p[0] = ('Mult', p[1], p[3], 'int')
 
     elif(p[2]=='-'):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Can't use '-' between non integers operands.")
-            p[0] = ('Minus', p[1], p[3],'error')
-        else:
-            p[0] = ('Minus', p[1], p[3], 'int')
+            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+        p[0] = ('Minus', p[1], p[3], 'int')
         
     elif(p[2]=='=='):
 
-        if left_type == 'int' and right_type == 'int':
-            p[0] = ('Equal', p[1], p[3], 'bool')
-        elif left_type == 'bool' and right_type == 'bool':
-            p[0] = ('Equal', p[1], p[3], 'bool')
-        else:
-            errors.append(f"Can't use '==' between non compatible operands.")
-            p[0] = ('Equal', p[1], p[3],'error')
+        if left_type != right_type:
+            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+        
+        p[0] = ('Equal', p[1], p[3], 'bool')
         
     elif(p[2]=='<>'):
 
-        if left_type == 'int' and right_type == 'int':
-            p[0] = ('NotEqual', p[1], p[3], 'bool')
-        elif left_type == 'bool' and right_type == 'bool':
-            p[0] = ('NotEqual', p[1], p[3], 'bool')
-        else:
-            errors.append(f"Can't use '<>' between non compatible operands.")
-            p[0] = ('NotEqual', p[1], p[3],'error')
+        if left_type != right_type:
+            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
         
+        p[0] = ('NotEqual', p[1], p[3], 'bool')
+
     elif(p[2]=='<='):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Can't use '<=' between non integers operands.")
-            p[0] = ('Leq', p[1], p[3],'error')
-        else:
-            p[0] = ('Leq', p[1], p[3], 'bool')
+            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+
+        p[0] = ('Leq', p[1], p[3], 'bool')
         
     elif(p[2]=='<'):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Can't use '<' between non integers operands.")
-            p[0] = ('Less', p[1], p[3],'error')
-        else:
-            p[0] = ('Less', p[1], p[3], 'bool')
+            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+
+        p[0] = ('Less', p[1], p[3], 'bool')
         
     elif(p[2]=='>='):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Can't use '>=' between non integers operands.")
-            p[0] = ('Geq', p[1], p[3],'error')
-        else:
-            p[0] = ('Geq', p[1], p[3], 'bool')
+            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+        p[0] = ('Geq', p[1], p[3], 'bool')
         
     elif(p[2]=='>'):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Can't use '>' between non integers operands.")
-            p[0] = ('Greater', p[1], p[3],'error')
-        else:
-            p[0] = ('Greater', p[1], p[3], 'bool')
+            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+
+        p[0] = ('Greater', p[1], p[3], 'bool')
 
     elif(p[2]=='and'):
 
         if left_type != 'bool' or right_type != 'bool':
-            errors.append(f"Can't use 'and' between non boolean operands.")
-            p[0] = ('And', p[1], p[3],'error')
-        else:
-            p[0] = ('And', p[1], p[3], 'bool')
+            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+        p[0] = ('And', p[1], p[3], 'bool')
         
     elif(p[2]=='or'):
 
         if left_type != 'bool' or right_type != 'bool':
-            errors.append(f"Can't use 'or' between non boolean operands.")
-            p[0] = ('Or', p[1], p[3],'error')
-        else:
-            p[0] = ('Or', p[1], p[3], 'bool')
+            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+
+        p[0] = ('Or', p[1], p[3], 'bool')
 
 
 def p_expression_un(p):
@@ -379,13 +374,13 @@ def p_expression_un(p):
     if(p[1] == '!'):
         
         if(var_type != 'bool'):
-            errors.append(f"Can't use non boolean type in ! unary operator.")
+            errors.append(f"Type error in line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
         p[0] = ('Not', p[2], 'bool')
 
     elif(p[1] == '-'):
         
         if(var_type != 'int'):
-            errors.append(f"Can't use non boolean type in ! unary operator.")
+            errors.append(f"Type error in line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
         p[0] = ('Minus', p[2], 'int')
 
 
@@ -395,12 +390,15 @@ def p_expression_app(p):
     expression_type = p[3][-1]
     var_type = current_scope.lookup(p[1])
 
-    if(var_type[0] != "function"):
-        errors.append(f"Can't use function application in non function type.")
+    #TODO: CHECK IF THIS IS BEST PRACTICE ACCORDING TO THE PROGRAM FLOW
+    if not (var_type):
+        errors.append(f"Variable not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+    
+    elif(var_type[0] != "function"):
+        errors.append(f"Error. {p[1]} is not indexable at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
 
-    if(expression_type != "int"):
-        errors.append(f"Can't use non integer type in function application.")
-
+    elif(expression_type != "int"):
+        errors.append(f"Error. Not integer index for function at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
     p[0] = ("ReadFunction", ("Ident", p[1], var_type), p[3], "int")
 
 
@@ -409,9 +407,9 @@ def p_expression_function_app(p):
 
     expression_type = p[3][-1]
     if(expression_type != "int"):
-        errors.append(f"Can't use non integer type in function application.")
+        errors.append(f"Error. Not integer index for function at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
 
-    p[0] = ("ReadFunction", p[1], p[3])
+    p[0] = ("ReadFunction", p[1], p[3], "int")
 
 
 def p_function_mod(p):
@@ -426,10 +424,10 @@ def p_function_mod_base(p):
     var_type = current_scope.lookup(p[1])
 
     if(not var_type):
-        errors.append(f"Non declare variable.")
+        errors.append(f"Variable not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
     else:
         if(var_type[0] != "function"):
-            errors.append(f"Can't use function modification in non function type.")
+            errors.append(f"The function modification operator is use in not function variable at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
 
     p[0] = ("WriteFunction", ("Ident", p[1], var_type), p[3], var_type)
 
@@ -440,8 +438,10 @@ def p_two_points(p):
     left_expression_type = p[1][-1]
     right_expression_type = p[3][-1]
 
-    if(left_expression_type != "int" or right_expression_type != "int"):
-        errors.append(f"Can't use non integer type in function modification.")
+    if (left_expression_type != "int"):
+        errors.append(f"Expected expression of type int at line {p.lineno(2)} and column {find_column(data, p.slice[2]) - 1}")
+    elif (right_expression_type != "int"):
+        errors.append(f"Expected expression of type int at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
 
     p[0] = ("TwoPoints", p[1], p[3])
 
@@ -455,7 +455,7 @@ def p_expression_id(p):
     '''expression : TkId'''
 
     if(not(current_scope.lookup(p[1]))):
-        errors.append(f"Variable non declare at line {p.lineno(1)} and column {find_column(data, p.slice[1])}.")
+        errors.append(f"Variable not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
         p[0] = ('Ident', p[1], 'error')
     else:
         type = current_scope.lookup(p[1])

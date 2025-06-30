@@ -13,7 +13,7 @@
      [] false -->
        a := 2+3
      [] false -->
-       d := true \/ false
+       d := true or false
      fi
     end;
     x := 2;
@@ -25,4 +25,4 @@
      x := x+1
     end
     // Esto es un comentario. Debe ser ignorado.
-]| 
+} 
