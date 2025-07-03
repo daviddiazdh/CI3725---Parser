@@ -6,5 +6,5 @@
   a := -1;
 
   // ejemplo de asignacion de objetos con tipos distintos
-  i := x(5:a)(1:a);
+  i := x(5:a)(1:a)
 }

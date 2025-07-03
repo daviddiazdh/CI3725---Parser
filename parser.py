@@ -11,12 +11,13 @@ from lexer import tokens, lexer
 # | Alan Argotte / 19-10664        |
 #  ================================ 
 
+# Scope is the class used for symbols table
 class Scope:
     def __init__(self, parent=None, name="global"):
-        self.parent = parent
-        self.symbols = {}
-        self.name = name
-        self.children = []
+        self.parent = parent 
+        self.symbols = {} # Here it'll save all variables declared in this scope
+        self.name = name # Created just to visually identify scopes, not used in final version
+        self.children = [] # Array of childrens, not used in final version
 
     def declare(self, name, tipo):
         if name in self.symbols:
@@ -37,7 +38,17 @@ class Scope:
         self.children.append(child_scope)
 
 
-def imprimir_tabla(scope, nivel=0):
+def print_symbol_table(scope, nivel=0):
+    """
+        Prints symbol table with identation.
+
+        ### Parameters:
+            * `scope`: Object scope defined before
+            * `level`: Identation level
+
+        ### Returns: 
+            * `None`: Just prints the symbol table asociated to scope.
+    """ 
     indent = "-" * nivel
     for var, tipo in scope.symbols.items():
         
@@ -45,9 +56,11 @@ def imprimir_tabla(scope, nivel=0):
             print(f"{indent}variable: {var} | type: function[..{int(tipo[-1]) - 1}]")
         else:
             print(f"{indent}variable: {var} | type: {tipo}")
-            
-    # for child in scope.children:
-    #     imprimir_tabla(child, nivel + 1)
+
+# The SyntaxError exception from yacc was not working correctly, 
+# so we decided to use a designed exception to recognize errors and stop parsing
+class ParserException(Exception):
+    pass
 
 # These variables keep control over the context 
 global_scope = Scope()
@@ -75,7 +88,7 @@ with open(file, "r") as f:
 
 symbol_table = {}
 
-# precedence is a special object of yacc parser which is used to
+# Precedence is a special object of yacc parser which is used to
 # determine what operation goes first, besides that, it also determines
 # operators' associativity direction
 precedence = (
@@ -87,7 +100,7 @@ precedence = (
     ('left', 'TkMult'),
     ('nonassoc', 'TkApp'),
     ('right', 'TkNot'),
-    ('right', 'UMinus')
+    ('right', 'UMinus'),
 )
 
 
@@ -121,10 +134,6 @@ def p_open_block(p):
 def p_declaration_list(p):
     '''declaration_list : declaration_list TkSemicolon declaration
                         | declaration'''
-    # if len(p) == 4:
-    #     p[0] = ('Sequencing', p[1], p[3])
-    # else:
-    #     p[0] = p[1]   
 
 
 def p_declaration(p):
@@ -135,12 +144,7 @@ def p_declaration(p):
     variables_list = p[2].split(', ')
     for var in variables_list:
         if not(current_scope.declare(var, tipo)):
-            errors.append(f"Variable ’{var}’ is already declared in the block at line {p.lineno(1)}")
-            
-    # if p[1] == 'int':
-    #     p[0] = (p[2] + ': int', p[1])
-    # else:
-    #     p[0] = (p[2] + ': bool', p[1])
+            raise ParserException(f"Variable {var} is already declared in the block at line {p.lineno(1)}")
 
 
 def p_declaration_function(p):
@@ -151,8 +155,8 @@ def p_declaration_function(p):
     variables_list = p[6].split(', ')
     for var in variables_list:
         if not(current_scope.declare(var, tipo)):
-            errors.append(f"Variable ’{var}’ is already declared in the block at line {p.lineno(1)}")
-
+            raise ParserException(f"Variable {var} is already declared in the block at line {p.lineno(1)}")
+    
     p[0] = (p[6] + ' : ' + p[1] + '[..Literal: ' + str(p[4]) + ']')
 
 
@@ -188,13 +192,21 @@ def p_statement_asig(p):
     var_type = current_scope.lookup(p[1])
 
     if(var_type and var_type != expression_type):
+
         if (var_type[0] != "function" or var_type[1] != 1 or expression_type != "int"):
-            errors.append(f"Type error. Variable {p[1]} has different type than expression at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+
+            if (expression_type[0] == 'function' and var_type[0] != 'function'):
+                raise ParserException(f"Variable {p[1]} is expected to be a function at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+            
+            elif (expression_type[0] == 'function' and var_type[0] == 'function'):
+                raise ParserException(f"It is expected a list of length {var_type[1]} at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
+            
+            else:
+                raise ParserException(f"Type error. Variable {p[1]} has different type than expression at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
 
     elif(not(var_type)):
-        errors.append(f"Variable {p[1]} not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+        raise ParserException(f"Variable {p[1]} not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
     
-
     p[0] = ("Asig", ("Ident", p[1], var_type), p[3])
 
 
@@ -206,29 +218,27 @@ def p_statement_if(p):
 def p_if_body(p):
     '''if_body : if_body TkGuard expression TkArrow statement_list
                 | expression TkArrow statement_list'''
-    
 
     if(len(p) == 6):        
         if (p[3][-1] != "bool"):
-            errors.append(f"No boolean guard at line {p.lineno(4)} and column {find_column(data, p.slice[4])}")
+            raise ParserException(f"No boolean guard at line {p.lineno(4)} and column {find_column(data, p.slice[4])}")
         
         p[0] = ("Guard", p[1], ("Then", p[3], p[5]))
 
     else:
         if (p[1][-1] != "bool"):
-            errors.append(f"No boolean guard at line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+            raise ParserException(f"No boolean guard at line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
         
         p[0] = ("Then", p[1], p[3])
-
-        
 
 
 def p_statement_while(p):
     '''statement : TkWhile expression TkArrow statement_list TkEnd'''
     if (p[2][-1] != "bool"):
-        errors.append(f"No boolean guard at line {p.lineno(3)} and column {find_column(data, p.slice[3])}")
+        raise ParserException(f"No boolean guard at line {p.lineno(3)} and column {find_column(data, p.slice[3])}")
     
     p[0] = ("While", ("Then", p[2], p[4]))   
+
 
 def p_statement_print(p):
     '''statement : TkPrint expression
@@ -246,6 +256,7 @@ def p_string_binop(p):
                 | string TkPlus expression
                 | expression TkPlus string'''
     p[0] = ('Concat', p[1], p[3], "String")
+
 
 def p_string(p):
     '''string : TkString'''
@@ -268,14 +279,13 @@ def p_expression_list(p):
     if p[1][0] == "Comma":
 
         if p[3][-1] != "int":
-            errors.append(f"There is no integer list at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
+            raise ParserException(f"There is no integer list at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
         p[0] = ("Comma", p[1], p[3], ("function", p[1][-1][1] + 1))
 
     else:
         p[0] = ("Comma", p[1], p[3], ("function", 2))
 
 
-# Todo: Simplify this
 def p_expression_binop(p):
     '''expression : expression TkPlus expression
                     | expression TkMinus expression
@@ -295,72 +305,72 @@ def p_expression_binop(p):
     if(p[2]=='+'):
     
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+            raise ParserException(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
         p[0] = ('Plus', p[1], p[3], 'int')
 
     elif(p[2]=='*'):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+            raise ParserException(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
         p[0] = ('Mult', p[1], p[3], 'int')
 
     elif(p[2]=='-'):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+            raise ParserException(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
         p[0] = ('Minus', p[1], p[3], 'int')
         
     elif(p[2]=='=='):
 
         if left_type != right_type:
-            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+            raise ParserException(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
         
         p[0] = ('Equal', p[1], p[3], 'bool')
         
     elif(p[2]=='<>'):
 
         if left_type != right_type:
-            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
-        
+            raise ParserException(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+
         p[0] = ('NotEqual', p[1], p[3], 'bool')
 
     elif(p[2]=='<='):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+            raise ParserException(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
 
         p[0] = ('Leq', p[1], p[3], 'bool')
         
     elif(p[2]=='<'):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+            raise ParserException(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
 
         p[0] = ('Less', p[1], p[3], 'bool')
         
     elif(p[2]=='>='):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+            raise ParserException(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
         p[0] = ('Geq', p[1], p[3], 'bool')
         
     elif(p[2]=='>'):
 
         if left_type != 'int' or right_type != 'int':
-            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+            raise ParserException(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
 
         p[0] = ('Greater', p[1], p[3], 'bool')
 
     elif(p[2]=='and'):
 
         if left_type != 'bool' or right_type != 'bool':
-            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+            raise ParserException(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
         p[0] = ('And', p[1], p[3], 'bool')
         
     elif(p[2]=='or'):
 
         if left_type != 'bool' or right_type != 'bool':
-            errors.append(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
+            raise ParserException(f"Type error in line {p.lineno(2)} and column {find_column(data, p.slice[2])}")
 
         p[0] = ('Or', p[1], p[3], 'bool')
 
@@ -374,13 +384,13 @@ def p_expression_un(p):
     if(p[1] == '!'):
         
         if(var_type != 'bool'):
-            errors.append(f"Type error in line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+            raise ParserException(f"Type error in line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
         p[0] = ('Not', p[2], 'bool')
 
     elif(p[1] == '-'):
         
         if(var_type != 'int'):
-            errors.append(f"Type error in line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+            raise ParserException(f"Type error in line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
         p[0] = ('Minus', p[2], 'int')
 
 
@@ -390,15 +400,14 @@ def p_expression_app(p):
     expression_type = p[3][-1]
     var_type = current_scope.lookup(p[1])
 
-    #TODO: CHECK IF THIS IS BEST PRACTICE ACCORDING TO THE PROGRAM FLOW
-    if not (var_type):
-        errors.append(f"Variable not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+    if not var_type:
+        raise ParserException(f"Variable not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
     
     elif(var_type[0] != "function"):
-        errors.append(f"Error. {p[1]} is not indexable at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+        raise ParserException(f"Error. {p[1]} is not indexable at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
 
     elif(expression_type != "int"):
-        errors.append(f"Error. Not integer index for function at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
+        raise ParserException(f"Error. Not integer index for function at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
     p[0] = ("ReadFunction", ("Ident", p[1], var_type), p[3], "int")
 
 
@@ -407,7 +416,7 @@ def p_expression_function_app(p):
 
     expression_type = p[3][-1]
     if(expression_type != "int"):
-        errors.append(f"Error. Not integer index for function at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
+        raise ParserException(f"Error. Not integer index for function at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
 
     p[0] = ("ReadFunction", p[1], p[3], "int")
 
@@ -423,11 +432,11 @@ def p_function_mod_base(p):
 
     var_type = current_scope.lookup(p[1])
 
-    if(not var_type):
-        errors.append(f"Variable not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+    if not var_type:
+        raise ParserException(f"Variable not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
     else:
         if(var_type[0] != "function"):
-            errors.append(f"The function modification operator is use in not function variable at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+            raise ParserException(f"The function modification operator is use in not function variable at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
 
     p[0] = ("WriteFunction", ("Ident", p[1], var_type), p[3], var_type)
 
@@ -439,9 +448,9 @@ def p_two_points(p):
     right_expression_type = p[3][-1]
 
     if (left_expression_type != "int"):
-        errors.append(f"Expected expression of type int at line {p.lineno(2)} and column {find_column(data, p.slice[2]) - 1}")
+        raise ParserException(f"Expected expression of type int at line {p.lineno(2)} and column {find_column(data, p.slice[2]) - 1}")
     elif (right_expression_type != "int"):
-        errors.append(f"Expected expression of type int at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
+        raise ParserException(f"Expected expression of type int at line {p.lineno(2)} and column {find_column(data, p.slice[2]) + 1}")
 
     p[0] = ("TwoPoints", p[1], p[3])
 
@@ -454,9 +463,9 @@ def p_expression_num(p):
 def p_expression_id(p):
     '''expression : TkId'''
 
-    if(not(current_scope.lookup(p[1]))):
-        errors.append(f"Variable not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
-        p[0] = ('Ident', p[1], 'error')
+    if(not current_scope.lookup(p[1])):
+        raise ParserException(f"Variable not declared at line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
+        
     else:
         type = current_scope.lookup(p[1])
         p[0] = ('Ident', p[1], type)
@@ -470,10 +479,12 @@ def p_expression_def(p):
                     | TkFalse'''
     p[0] = ('Literal', p[1], 'bool')
 
+
 # Function to calculate new line
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
+
 
 # Function to calculate token's column
 def find_column(input, token):
@@ -482,31 +493,39 @@ def find_column(input, token):
         last_cr = -1
     return token.lexpos - last_cr
 
+
 # Array to save errors
 errors = []
 def p_error(p):
     if p:
         col = find_column(data, p)
-        errors.append(f"Sintax error in row {p.lineno}, column {col}: unexpected token ’{p.value}’.")
+        raise ParserException(f"Sintax error in row {p.lineno}, column {col}: unexpected token ’{p.value}’.")
     else:
-        errors.append("Sintax error at the end of the file")
-
-
-parser = yacc.yacc()
-result = parser.parse(data, lexer=lexer)
+        raise ParserException("Sintax error at the end of the file")
 
 expressions = ["Plus", "Minus", "Mult", "Equal", "NotEqual", "Leq", "Less", "Geq", "Greater", "And", "Or", "Not", "UMinus", "ReadFunction", "WriteFunction", "Concat"]
 
 # This function gets the result tree from yacc parser
 # and returns tree in format required
 def print_ast(node, level=0):
+    """
+        Prints the YACC tree with format.
+
+        ### Parameters:
+            * `node`: Object node defined by YACC, if you want the whole tree you have to pass the initial node
+            * `level`: Identation level
+
+        ### Returns: 
+            * `None`: Just prints the YACC tree with format.
+    """
+
     indent = "-" * level
     if isinstance(node, tuple):
         
         if node[0] == "Symbols Table":
 
             print(f"{indent}{node[0]}")
-            imprimir_tabla(node[1], level + 1)
+            print_symbol_table(node[1], level + 1)
 
         elif node[0] == "Literal":
             print(f"{indent}Literal: {node[1]} | type: {node[-1]}")
@@ -545,11 +564,9 @@ def print_ast(node, level=0):
     else:
         print(f"{indent}{node}")
 
-# In case of errors, we don't print the tree
-if errors:
-    print(errors[0])
-    # for e in errors:
-    #     print(e)
-else:
+try:
+    parser = yacc.yacc()
+    result = parser.parse(data, lexer=lexer)
     print_ast(result)
-    #print(symbol_table)
+except ParserException as e:
+    print(f"{e}")

@@ -6,5 +6,5 @@
     a := b+2*3 - -3*2;
     d := false;
     A := A(2+a:b).2 <= -b;
-    print "\"hola mundo \" \n" + 3 + A(2+a:b).2;
+    print "\"hola mundo \" \n" + 3 + A(2+a:b).2
 }
