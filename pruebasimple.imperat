@@ -1,7 +1,8 @@
 {
-    int a,b;
-    int a;
+    int x,y;
 
-    print a + b
-
+    {
+        bool x, y;
+        x := true
+    }
 }

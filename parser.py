@@ -18,17 +18,21 @@ class Scope:
         self.symbols = {} # Here it'll save all variables declared in this scope
         self.name = name # Created just to visually identify scopes, not used in final version
         self.children = [] # Array of childrens, not used in final version
+        self.level = 0
 
-    def declare(self, name, tipo):
+    def declare(self, name, tipo, number):
         if name in self.symbols:
             return False
         else:
-            self.symbols[name] = tipo
+            self.symbols[name] = (tipo, number)
             return True
 
-    def lookup(self, name):
+    def lookup(self, name, num = 0):
         if name in self.symbols:
-            return self.symbols[name]
+            if num == 0:
+                return self.symbols[name][0]
+            else:
+                return self.symbols[name][1]
         elif self.parent:
             return self.parent.lookup(name)
         else:
@@ -53,9 +57,9 @@ def print_symbol_table(scope, nivel=0):
     for var, tipo in scope.symbols.items():
         
         if(tipo[0] == "function"):
-            print(f"{indent}variable: {var} | type: function[..{int(tipo[-1]) - 1}]")
+            print(f"{indent}variable: {var} | type: function[..{int(tipo[0][-1]) - 1}]")
         else:
-            print(f"{indent}variable: {var} | type: {tipo}")
+            print(f"{indent}variable: {var} | type: {tipo[0]}")
 
 # The SyntaxError exception from yacc was not working correctly, 
 # so we decided to use a designed exception to recognize errors and stop parsing
@@ -66,6 +70,8 @@ class ParserException(Exception):
 global_scope = Scope()
 current_scope = global_scope
 block_counter = 0
+number_of_variable = 1
+
 
 lexer.lineno = 1
 
@@ -142,21 +148,30 @@ def p_declaration(p):
 
     tipo = p[1]
     variables_list = p[2].split(', ')
+
+    global number_of_variable
+
     for var in variables_list:
-        if not(current_scope.declare(var, tipo)):
+        if not(current_scope.declare(var, tipo, number_of_variable)):
             raise ParserException(f"Variable {var} is already declared in the block at line {p.lineno(1)}")
+
+        number_of_variable += 1
 
 
 def p_declaration_function(p):
     '''declaration : TkFunction TkOBracket TkSoForth TkNum TkCBracket variable_list'''
 
     tipo = (p[1], int(p[4]) + 1)
-    
     variables_list = p[6].split(', ')
+
+    global number_of_variable
+
     for var in variables_list:
-        if not(current_scope.declare(var, tipo)):
+        if not(current_scope.declare(var, tipo, number_of_variable)):
             raise ParserException(f"Variable {var} is already declared in the block at line {p.lineno(1)}")
-    
+
+        number_of_variable += 1
+
     p[0] = (p[6] + ' : ' + p[1] + '[..Literal: ' + str(p[4]) + ']')
 
 
@@ -190,7 +205,7 @@ def p_statement_asig(p):
     
     expression_type = p[3][-1]
     var_type = current_scope.lookup(p[1])
-
+    
     if(var_type and var_type != expression_type):
 
         if (var_type[0] != "function" or var_type[1] != 1 or expression_type != "int"):
@@ -391,7 +406,7 @@ def p_expression_un(p):
         
         if(var_type != 'int'):
             raise ParserException(f"Type error in line {p.lineno(1)} and column {find_column(data, p.slice[1])}")
-        p[0] = ('Minus', p[2], 'int')
+        p[0] = ('UMinus', p[2], 'int')
 
 
 def p_expression_app(p):
@@ -443,7 +458,7 @@ def p_function_mod_base(p):
 
 def p_two_points(p):
     '''two_points : expression TkTwoPoints expression'''
-
+    
     left_expression_type = p[1][-1]
     right_expression_type = p[3][-1]
 
@@ -505,6 +520,9 @@ def p_error(p):
 
 expressions = ["Plus", "Minus", "Mult", "Equal", "NotEqual", "Leq", "Less", "Geq", "Greater", "And", "Or", "Not", "UMinus", "ReadFunction", "WriteFunction", "Concat"]
 
+expressions_extra = ["ReadFunction", "WriteFunction", "Concat"]
+
+
 # This function gets the result tree from yacc parser
 # and returns tree in format required
 def print_ast(node, level=0):
@@ -564,9 +582,392 @@ def print_ast(node, level=0):
     else:
         print(f"{indent}{node}")
 
+
+def translate_to_lambda(result):
+
+    global current_scope
+
+    current_scope = global_scope
+
+    print("Z = lambda g:(lambda x:g(lambda v:x(x)(v)))(lambda x:g(lambda v:x(x)(v)))")
+    print("true = lambda x:lambda y:x")
+    print("false = lambda x:lambda y:y")
+    print("nil = lambda x:true")
+    print("cons = lambda x:lambda y:lambda f: f(x)(y)")
+    print("head = lambda p: p(true)")
+    print("tail = lambda p:p(false)")
+    print("apply = Z(lambda g:lambda f:lambda x:f if x==nil else (g(f(head(x)))(tail(x))))")
+    print("lift_do= lambda exp:lambda f:lambda g: lambda x: g(f(x)) if (exp(x)) else x")
+    print("do= lambda exp:lambda f:Z(lift_do(exp)(f))\n")
+
+    text = "(lambda x1:" + lambda_translator(result, "") + ")"
+    
+    print(f"program = {text}")
+
+    current_scope = global_scope
+
+    iter_xi = ""
+    iter_var = ""
+    iter_consi = ""
+    i = 0
+    default_value = 0
+
+    for var, tipo in current_scope.symbols.items():
+
+        iter_xi = "lambda " + var + ":" + iter_xi
+
+        if tipo[0] == 'int':
+            default_value = 0
+        elif tipo[0] == 'bool':
+            default_value = True
+        elif tipo[0][0] == 'function':
+            default_value = [0] * tipo[0][1]
+
+        if(var):
+            if(i == 0):
+                iter_consi = "cons(" + str(default_value) + ")(nil)" + iter_consi
+                iter_var = iter_var + "'" + var + "':" + var
+            else:
+                iter_consi = "cons(" + str(default_value) + ")" + "(" + iter_consi + ")"
+                iter_var = iter_var + ",'" + var + "':" + var
+
+        i += 1
+
+    print(f"\nresult=program({iter_consi})")
+    print("print(apply(" + iter_xi + "{" + iter_var + "})(result))\n")
+
+
+first_block = 0
+first_instruction = 0
+last_then = 0
+first_comma = 0
+
+
+def lambda_translator(node, text, level=0):
+
+    global current_scope
+    global first_instruction, first_block, last_then
+    if current_scope != None:
+        if(current_scope.level > level):
+            current_scope = current_scope.parent
+            if current_scope != None:
+                print(f"Volviendo a tabla {current_scope.name} en nivel {current_scope.level}")
+
+    indent = "-" * level
+    if isinstance(node, tuple):
+        
+        if node[0] == "Block":
+            if first_block != 0:
+                
+                text = lambda_translator(node[1], text, level + 1)
+
+                iter_scope = node[1][1]
+                iter_xi = ""
+                iter_xi_temp = ""
+                tail_amount = 0
+                iter_consi = ""
+                tail_text = ""
+                tail_parenth = ""
+                i = 0
+                j = 0
+
+                for var, tipo in iter_scope.symbols.items(): 
+                    
+                    if i == 0:
+                        
+                        if tipo[0] == 'int':
+                            default_value = 0
+                        elif tipo[0] == 'bool':
+                            default_value = True
+                        elif tipo[0][0] == 'function':
+                            default_value = [0] * tipo[0][1]
+
+                        if(j == 0):
+                            iter_consi = "cons(" + str(default_value) + ")(x1)" + iter_consi
+                        else:
+                            iter_consi = "cons(" + str(default_value) + ")" + "(" + iter_consi + ")"
+
+                        tail_text = tail_text + "tail("
+                        tail_parenth = tail_parenth + ")"
+
+                        tail_amount += 1
+                        j += 1
+
+                iter_consi = f"({iter_consi})"
+
+                text = f"{tail_text}{lambda_translator(node[2], text, level + 1)}{iter_consi}{tail_parenth}"
+
+                print(f"Este es el resultado del bloque: {text}\n")
+
+            else:
+                first_block = 1
+                for child in node[1:]:
+                    if child != 'int' and child != 'bool':
+                        text = lambda_translator(child, text, level + 1)
+
+        elif node[0] == "Symbols Table":
+            
+            current_scope = node[1]
+            current_scope.level = level
+            # print(f"Tabla {current_scope.name} en nivel {current_scope.level}")
+            # print(f"{indent}{node[0]}")
+            # print_symbol_table(node[1], level + 1)
+
+        elif node[0] == "Sequencing":
+            
+            left_inst = lambda_translator(node[1], text, level + 1)
+            right_inst = lambda_translator(node[2], text, level + 1)
+
+            text = f"({right_inst})({left_inst})"
+
+        elif node[0] == "Literal":
+
+            if(node[1] == 'true'):
+                text = 'True'
+
+            elif(node[1] == 'false'):
+                text = 'False'
+
+            else:
+                text = node[1]
+
+        elif node[0] == "Ident":
+
+            number = current_scope.lookup(node[1], 1)
+            text = "x" + str(number)
+
+        elif node[0] == "Asig":
+
+            asign_text = "apply("
+            iter_xi = ""
+            iter_consi = ""
+            i = 0
+
+            asign_var = node[1][1]
+            
+            iter_scope = current_scope
+
+            while iter_scope != None:
+                
+                iter_xi_temp = ""
+                iter_consi_temp = ""
+
+                if iter_scope == current_scope:
+                    
+                    for var, tipo in iter_scope.symbols.items():
+                    
+                        iter_xi_temp = "lambda x" + str(tipo[1]) + ":" + iter_xi_temp
+
+                        if(var == asign_var):
+
+                            exp_text = lambda_translator(node[2], text, level + 1)
+
+                            if(tipo[0][0] == 'function' and tipo[0][1] == 1):
+                                exp_text = "[" + exp_text + "]"
+
+                            if(i == 0 and iter_scope.parent == None):
+                                iter_consi_temp = "cons(" + exp_text + ")(nil)" + iter_consi_temp
+                                i += 1
+                            else:
+
+                                if iter_consi_temp != "":
+                                    iter_consi_temp = "cons(x" + str(tipo[1]) + ")" + "(" + iter_consi_temp + ")"
+                                else:
+                                    iter_consi_temp = "cons(x" + str(tipo[1]) + ")"
+
+                        else:
+                            if(i == 0 and iter_scope.parent == None):
+                                iter_consi_temp = "cons(x" + str(tipo[1]) + ")(nil)" + iter_consi_temp
+                                i += 1
+                            else:
+
+                                if iter_consi_temp != "":
+                                    iter_consi_temp = "cons(x" + str(tipo[1]) + ")" + "(" + iter_consi_temp + ")"
+                                else:
+                                    iter_consi_temp = "cons(x" + str(tipo[1]) + ")"
+
+                else:
+
+                    for var, tipo in iter_scope.symbols.items():
+                    
+                        iter_xi_temp = "lambda x" + str(tipo[1]) + ":" + iter_xi_temp
+
+                        if(i == 0):
+                            iter_consi_temp = "cons(x" + str(tipo[1]) + ")(nil)" + iter_consi_temp
+                            i += 1
+                        else:
+
+                            if iter_consi_temp != "":
+                                iter_consi_temp = "cons(x" + str(tipo[1]) + ")" + "(" + iter_consi_temp + ")"
+                            else:
+                                iter_consi_temp = "cons(x" + str(tipo[1]) + ")"
+
+                iter_xi = iter_xi + iter_xi_temp
+
+                if iter_consi != "":
+                    iter_consi =  iter_consi + "(" + iter_consi_temp + ")"
+                else:
+                    iter_consi =  iter_consi + iter_consi_temp
+
+                print("Este es iter_consi: " + iter_consi)
+
+                iter_scope = iter_scope.parent
+
+            if(first_instruction == 0):
+                first_instruction += 1
+                asign_text = "(" + asign_text + iter_xi + " " + iter_consi + ")" + ")" + "(x1)" 
+            else:
+                asign_text = asign_text + iter_xi + " " + iter_consi + ")"
+
+            text = asign_text
+            
+        elif node[0] == "Mult":
+
+            text = f"{lambda_translator(node[1], text, level + 1)}*{lambda_translator(node[2], text, level + 1)}"
+
+
+        elif node[0] == "Comma":
+
+            global first_comma
+
+            if first_comma == 0:
+                first_comma = 1
+                text = f"[{lambda_translator(node[1], text, level + 1)},{lambda_translator(node[2], text, level + 1)}]"
+            else:
+                text = f"{lambda_translator(node[1], text, level + 1)},{lambda_translator(node[2], text, level + 1)}"
+
+            if node[2][0] != "Comma":
+                first_comma = 0
+            
+
+        elif node[0] == "ReadFunction":
+
+            text = f"{lambda_translator(node[1], text, level + 1)}[{lambda_translator(node[2], text, level + 1)}]"
+
+        elif node[0] == "Plus":
+
+            text = f"{lambda_translator(node[1], text, level + 1)}+{lambda_translator(node[2], text, level + 1)}"
+
+        elif node[0] == "Minus":
+
+            text = f"{lambda_translator(node[1], text, level + 1)}-{lambda_translator(node[2], text, level + 1)}"
+
+        elif node[0] == "UMinus":
+
+            text = f"-{lambda_translator(node[1], text, level + 1)}"
+
+        elif node[0] == "Or":
+
+            text = f"{lambda_translator(node[1], text, level + 1)} or {lambda_translator(node[2], text, level + 1)}"
+
+        elif node[0] == "And":
+
+            text = f"{lambda_translator(node[1], text, level + 1)} and {lambda_translator(node[2], text, level + 1)}"
+
+        elif node[0] == "Equal":
+
+            text = f"{lambda_translator(node[1], text, level + 1)} == {lambda_translator(node[2], text, level + 1)}"
+
+
+        elif node[0] == "NotEqual": 
+            
+            text = f"{lambda_translator(node[1], text, level + 1)} != {lambda_translator(node[2], text, level + 1)}"
+        
+        elif node[0] == "Leq":
+        
+            text = f"{lambda_translator(node[1], text, level + 1)} <= {lambda_translator(node[2], text, level + 1)}"
+
+        elif node[0] == "Less":
+        
+            text = f"{lambda_translator(node[1], text, level + 1)} < {lambda_translator(node[2], text, level + 1)}"
+
+        elif node[0] == "Geq":
+        
+            text = f"{lambda_translator(node[1], text, level + 1)} >= {lambda_translator(node[2], text, level + 1)}"
+        
+        elif node[0] == "Greater":
+
+            text = f"{lambda_translator(node[1], text, level + 1)} > {lambda_translator(node[2], text, level + 1)}"
+
+        elif node[0] == "Not":
+
+            text = f"not({lambda_translator(node[1], text, level + 1)})"
+
+        elif node[0] in expressions_extra:
+
+            for child in node[1:-1]:
+                text = lambda_translator(child, text, level + 1)
+
+        elif node[0] == "If":
+            
+            last_then = 0
+
+            if first_instruction == 0:
+                first_instruction += 1
+
+                if (node[1][0] == "Then"):
+                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1)} else (x1))(x1)"
+                else:
+                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1)})(x1)"
+
+            else:
+                
+                if (node[1][0] == "Then"):
+                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1)} else (x1))"
+                else:
+                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1)})"
+                
+
+        elif node[0] == "Guard":
+            
+            f_last_then = last_then
+            if (last_then == 0):
+                last_then = 1
+            
+            guard_right = lambda_translator(node[2], text, level + 1)
+            guard_left = lambda_translator(node[1], text, level + 1)
+
+            if (node[2][0] == "Then" and f_last_then == 0):
+                text = f"{guard_left} else ({guard_right} else (x1))"
+
+            elif (node[2][0] == "Then" and f_last_then != 0):
+                text = f"{guard_left} else {guard_right}"
+
+            else:
+                text = f"{guard_left} else ({guard_right})"
+        
+        elif node[0] == "Then":
+
+            iter_xi = ""
+            i = 0
+
+            for var, tipo in current_scope.symbols.items():
+                
+                iter_xi = "lambda x" + str(tipo[1]) + ":" + iter_xi
+
+            text = f"({lambda_translator(node[2], text, level + 1)})(x1) if (apply ({iter_xi} {lambda_translator(node[1], text, level + 1)}))(x1)"
+
+        else:
+
+            for child in node[1:]:
+                if child != 'int' and child != 'bool':
+                    text = lambda_translator(child, text, level + 1) + text
+
+    else:
+        print(f"{indent}{node}")
+    
+    return str(text)
+
 try:
     parser = yacc.yacc()
     result = parser.parse(data, lexer=lexer)
-    print_ast(result)
+
+    current_scope = global_scope
+
+    translate_to_lambda(result)
+
+    #print(result)
+
+
 except ParserException as e:
     print(f"{e}")

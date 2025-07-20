@@ -18,15 +18,18 @@ The **Lexer** is the module responsible for recognizing valid and invalid tokens
 python lexer.py [file]
 ```
 
-- [file] has to be a .imperat file
+- [file] must be a .imperat file
 
-
-
-## 👓 Second Step: Parse
+## 👓 Second Step: Parser
 
 The **Parser** is the module responsible for determine the grammar and identify codes which satisfy this grammar. It outputs either:
 - A structural tree code, or
 - A list of grammar errors
+
+> ⚠️ This step is **essential** for all subsequent stages of the parser.
+
+## 👓 Third Step: Parser – Type and Context Error Recognizer
+The **Type and Context Error Recognizer** component enhances the parser with additional rule checks to detect both type and context errors. Up to this point, the parser can successfully identify all type errors in the Imperat language.
 
 > ⚠️ This step is **essential** for all subsequent stages of the parser.
 
@@ -36,4 +39,4 @@ The **Parser** is the module responsible for determine the grammar and identify 
 python parser.py [file]
 ```
 
-- [file] has to be a .imperat file
+- [file] must be a .imperat file
