@@ -641,12 +641,13 @@ first_block = 0
 first_instruction = 0
 last_then = 0
 first_comma = 0
+in_block = 0
 
 
 def lambda_translator(node, text, level=0):
 
     global current_scope
-    global first_instruction, first_block, last_then
+    global first_instruction, first_block, last_then, in_block
     if current_scope != None:
         if(current_scope.level > level):
             current_scope = current_scope.parent
@@ -657,8 +658,9 @@ def lambda_translator(node, text, level=0):
     if isinstance(node, tuple):
         
         if node[0] == "Block":
+            
             if first_block != 0:
-                
+
                 text = lambda_translator(node[1], text, level + 1)
 
                 iter_scope = node[1][1]
@@ -692,9 +694,11 @@ def lambda_translator(node, text, level=0):
 
                         tail_amount += 1
                         j += 1
-
+                
+                
                 iter_consi = f"({iter_consi})"
 
+                in_block = 1
                 text = f"{tail_text}{lambda_translator(node[2], text, level + 1)}{iter_consi}{tail_parenth}"
 
                 print(f"Este es el resultado del bloque: {text}\n")
@@ -704,6 +708,7 @@ def lambda_translator(node, text, level=0):
                 for child in node[1:]:
                     if child != 'int' and child != 'bool':
                         text = lambda_translator(child, text, level + 1)
+
 
         elif node[0] == "Symbols Table":
             
@@ -747,6 +752,9 @@ def lambda_translator(node, text, level=0):
             
             iter_scope = current_scope
 
+            var_counter = 0
+            var_counter_temp = 2
+
             while iter_scope != None:
                 
                 iter_xi_temp = ""
@@ -771,9 +779,9 @@ def lambda_translator(node, text, level=0):
                             else:
 
                                 if iter_consi_temp != "":
-                                    iter_consi_temp = "cons(x" + str(tipo[1]) + ")" + "(" + iter_consi_temp + ")"
+                                    iter_consi_temp = "cons(" + exp_text + ")" + "(" + iter_consi_temp + ")"
                                 else:
-                                    iter_consi_temp = "cons(x" + str(tipo[1]) + ")"
+                                    iter_consi_temp = "cons(" + exp_text + ")"
 
                         else:
                             if(i == 0 and iter_scope.parent == None):
@@ -785,7 +793,8 @@ def lambda_translator(node, text, level=0):
                                     iter_consi_temp = "cons(x" + str(tipo[1]) + ")" + "(" + iter_consi_temp + ")"
                                 else:
                                     iter_consi_temp = "cons(x" + str(tipo[1]) + ")"
-
+                        
+                        var_counter += 1
                 else:
 
                     for var, tipo in iter_scope.symbols.items():
@@ -801,25 +810,35 @@ def lambda_translator(node, text, level=0):
                                 iter_consi_temp = "cons(x" + str(tipo[1]) + ")" + "(" + iter_consi_temp + ")"
                             else:
                                 iter_consi_temp = "cons(x" + str(tipo[1]) + ")"
+                        
+                        var_counter += 1
+                
+                print(f"Este es var counter:{var_counter} y este var_counter_temp:{var_counter_temp}")
 
                 iter_xi = iter_xi + iter_xi_temp
 
                 if iter_consi != "":
-                    iter_consi =  iter_consi + "(" + iter_consi_temp + ")"
+                    iter_consi =  iter_consi[:-(var_counter_temp - 1)] + "(" +  iter_consi_temp + ")" + ((var_counter_temp - 1) * ')')
                 else:
-                    iter_consi =  iter_consi + iter_consi_temp
+                    iter_consi =  iter_consi_temp
 
                 print("Este es iter_consi: " + iter_consi)
 
                 iter_scope = iter_scope.parent
 
-            if(first_instruction == 0):
+                var_counter_temp = var_counter
+                var_counter = 0
+
+            if(first_instruction == 0 and in_block == 0):
                 first_instruction += 1
                 asign_text = "(" + asign_text + iter_xi + " " + iter_consi + ")" + ")" + "(x1)" 
             else:
                 asign_text = asign_text + iter_xi + " " + iter_consi + ")"
 
             text = asign_text
+
+            in_block = 0
+            
             
         elif node[0] == "Mult":
 

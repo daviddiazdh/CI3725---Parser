@@ -1,8 +1,8 @@
 {
-    int x,y;
+    int x, y;
 
     {
-        bool x, y;
+        bool x;
         x := true
     }
 }
