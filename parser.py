@@ -598,20 +598,18 @@ def translate_to_lambda(result):
 
     current_scope = global_scope
 
-    print("Z = lambda g:(lambda x:g(lambda v:x(x)(v)))(lambda x:g(lambda v:x(x)(v)))")
-    print("true = lambda x:lambda y:x")
-    print("false = lambda x:lambda y:y")
-    print("nil = lambda x:true")
-    print("cons = lambda x:lambda y:lambda f: f(x)(y)")
-    print("head = lambda p: p(true)")
-    print("tail = lambda p:p(false)")
-    print("apply = Z(lambda g:lambda f:lambda x:f if x==nil else (g(f(head(x)))(tail(x))))")
-    print("lift_do= lambda exp:lambda f:lambda g: lambda x: g(f(x)) if (exp(x)) else x")
-    print("do= lambda exp:lambda f:Z(lift_do(exp)(f))\n")
+    HEADER = """Z = lambda g:(lambda x:g(lambda v:x(x)(v)))(lambda x:g(lambda v:x(x)(v)))
+true = lambda x:lambda y:x
+false = lambda x:lambda y:y
+nil = lambda x:true
+cons = lambda x:lambda y:lambda f: f(x)(y)
+head = lambda p: p(true)
+tail = lambda p:p(false)
+apply = Z(lambda g:lambda f:lambda x:f if x==nil else (g(f(head(x)))(tail(x))))
+lift_do=lambda exp:lambda f:lambda g: lambda x: g(f(x)) if (exp(x)) else x
+do=lambda exp:lambda f:Z(lift_do(exp)(f))"""
 
     text = "(lambda x1:" + lambda_translator(result, "") + ")"
-    
-    print(f"program = {text}")
 
     current_scope = global_scope
 
@@ -642,8 +640,16 @@ def translate_to_lambda(result):
 
         i += 1
 
-    print(f"\nresult=program({iter_consi})")
-    print("print(apply(" + iter_xi + "{" + iter_var + "})(result))\n")
+    last_line = "print(apply(" + iter_xi + "{" + iter_var + "})(result))"
+
+    final_program = f"""{HEADER}
+
+program = {text}
+
+result=program({iter_consi})
+{last_line}"""
+    
+    print(final_program)
 
 
 def lambda_translator(node, text, level=0, params = ""):
@@ -979,9 +985,9 @@ try:
     result = parser.parse(data, lexer=lexer)
 
     current_scope = global_scope
-
     translate_to_lambda(result)
 
 
 except ParserException as e:
     print(f"{e}")
+
