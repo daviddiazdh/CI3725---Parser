@@ -619,7 +619,7 @@ def translate_to_lambda(result):
         if tipo[0] == 'int':
             default_value = 0
         elif tipo[0] == 'bool':
-            default_value = True
+            default_value = False
         elif tipo[0][0] == 'function':
             default_value = [0] * tipo[0][1]
 
@@ -643,7 +643,6 @@ last_then = 0
 first_comma = 0
 in_block = 0
 
-
 def lambda_translator(node, text, level=0, params = ""):
 
     global current_scope
@@ -651,8 +650,6 @@ def lambda_translator(node, text, level=0, params = ""):
     if current_scope != None:
         if(current_scope.level > level):
             current_scope = current_scope.parent
-            if current_scope != None:
-                print(f"Volviendo a tabla {current_scope.name} en nivel {current_scope.level}")
 
     indent = "-" * level
     if isinstance(node, tuple):
@@ -680,7 +677,7 @@ def lambda_translator(node, text, level=0, params = ""):
                         if tipo[0] == 'int':
                             default_value = 0
                         elif tipo[0] == 'bool':
-                            default_value = True
+                            default_value = False
                         elif tipo[0][0] == 'function':
                             default_value = [0] * tipo[0][1]
 
@@ -728,9 +725,6 @@ def lambda_translator(node, text, level=0, params = ""):
             
             current_scope = node[1]
             current_scope.level = level
-            # print(f"Tabla {current_scope.name} en nivel {current_scope.level}")
-            # print(f"{indent}{node[0]}")
-            # print_symbol_table(node[1], level + 1)
 
         elif node[0] == "Sequencing":
             
@@ -754,6 +748,7 @@ def lambda_translator(node, text, level=0, params = ""):
             
             number = current_scope.lookup(node[1], 1)
             text = "x" + str(number)
+            
 
         elif node[0] == "Asig":
 
@@ -992,7 +987,22 @@ def lambda_translator(node, text, level=0, params = ""):
                     text = lambda_translator(child, text, level + 1, params) + text
 
     else:
-        print(f"{indent}{node}")
+        
+        if node == "skip":
+            
+            if(first_instruction == 0 and in_block == 0):
+
+                first_instruction = 1
+                text = "(lambda x1 : x1)(x1)"
+
+            elif(first_instruction == 0 and in_block == 1):
+                
+                first_instruction = 1
+                text = f"(lambda x1 : x1){params}"
+
+            else:
+                text = "(lambda x1 : x1)"
+
     
     return str(text)
 

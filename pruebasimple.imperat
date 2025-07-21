@@ -1,18 +1,27 @@
 {
     int x, y;
+    function [..2] f;
 
     {
         int a, b;
         
-        if x == y --> 
+        f := 1, 0, 3;
+
+        if x == f.1 --> 
            x := 1 + x
         fi;
 
         {
             int c,d;
+            
+            {
+                int x;
+                x := 0
+            };
 
-            x := 3;
-            y := 2
+            y := 2;
+
+            skip
 
         }
 
