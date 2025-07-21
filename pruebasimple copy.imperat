@@ -1,12 +1,10 @@
 {
-    int a,b,c;
+    int x,y;
 
-    a := 12;
+    {
 
-    if a > b and a > 0 -->
-        a := 3
-    [] a < b -->
-        b := 2
-    fi
+        x := 3
+
+    } 
 
 }

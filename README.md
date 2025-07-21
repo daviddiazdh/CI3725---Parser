@@ -33,6 +33,12 @@ The **Type and Context Error Recognizer** component enhances the parser with add
 
 > ⚠️ This step is **essential** for all subsequent stages of the parser.
 
+## 👓 Fourth Step: Translator
+The **Translator** 
+
+
+> ⚠️ This step is **essential** for all subsequent stages of the parser.
+
 ### 📦 Usage
 
 ```bash
