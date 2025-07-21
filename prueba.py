@@ -9,8 +9,7 @@ apply = Z(lambda g:lambda f:lambda x:f if x==nil else (g(f(head(x)))(tail(x))))
 lift_do= lambda exp:lambda f:lambda g: lambda x: g(f(x)) if (exp(x)) else x
 do= lambda exp:lambda f:Z(lift_do(exp)(f))
 
-
-program = (lambda x1:tail(tail(apply(lambda x4:lambda x3:lambda x2:lambda x1: cons(x4)(cons(True)(cons(x2)(cons(x1)(nil)))))(cons(True)(cons(True)(x1))))))
+program = (lambda x1:(lambda x1: tail(tail(((lambda x1: tail(tail((apply(lambda x6:lambda x5:lambda x4:lambda x3:lambda x2:lambda x1: cons(x6)(cons(x5)(cons(x4)(cons(x3)(cons(2)(cons(x1)(nil))))))))((apply(lambda x6:lambda x5:lambda x4:lambda x3:lambda x2:lambda x1: cons(x6)(cons(x5)(cons(x4)(cons(x3)(cons(x2)(cons(3)(nil))))))))((cons(0)(cons(0)(x1)))))))))((lambda x1: (apply(lambda x4:lambda x3:lambda x2:lambda x1: cons(x4)(cons(x3)(cons(x2)(cons(1+x1)(nil))))))(x1) if (apply (lambda x4:lambda x3:lambda x2:lambda x1: x1 == x2))(x1) else (x1))((cons(0)(cons(0)(x1))))))))(x1))
 
 result=program(cons(0)(cons(0)(nil)))
 print(apply(lambda y:lambda x:{'x':x,'y':y})(result))

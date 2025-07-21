@@ -2,7 +2,19 @@
     int x, y;
 
     {
-        bool x;
-        x := true
+        int a, b;
+        
+        if x == y --> 
+           x := 1 + x
+        fi;
+
+        {
+            int c,d;
+
+            x := 3;
+            y := 2
+
+        }
+
     }
 }

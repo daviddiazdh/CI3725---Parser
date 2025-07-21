@@ -34,7 +34,7 @@ class Scope:
             else:
                 return self.symbols[name][1]
         elif self.parent:
-            return self.parent.lookup(name)
+            return self.parent.lookup(name, num)
         else:
             return None
 
@@ -644,7 +644,7 @@ first_comma = 0
 in_block = 0
 
 
-def lambda_translator(node, text, level=0):
+def lambda_translator(node, text, level=0, params = ""):
 
     global current_scope
     global first_instruction, first_block, last_then, in_block
@@ -698,16 +698,30 @@ def lambda_translator(node, text, level=0):
                 
                 iter_consi = f"({iter_consi})"
 
-                in_block = 1
-                text = f"{tail_text}{lambda_translator(node[2], text, level + 1)}{iter_consi}{tail_parenth}"
+                if first_instruction == 0 and in_block == 0: 
+                    in_block = 1
+                    first_instruction = 0
+                    text = f"(lambda x1: {tail_text}{lambda_translator(node[2], text, level + 1, iter_consi)}{tail_parenth})(x1)"
 
-                print(f"Este es el resultado del bloque: {text}\n")
+                elif first_instruction == 0 and in_block == 1: 
+                    in_block = 1
+                    first_instruction = 0
+                    text = f"(lambda x1: {tail_text}{lambda_translator(node[2], text, level + 1, iter_consi)}{tail_parenth})({params})"
+                
+                else:
+                    in_block = 1
+                    first_instruction = 0
+                    text = f"(lambda x1: {tail_text}{lambda_translator(node[2], text, level + 1, iter_consi)}{tail_parenth})"
+                    
+                
+                in_block = 0
+                first_instruction = 1
 
             else:
                 first_block = 1
                 for child in node[1:]:
                     if child != 'int' and child != 'bool':
-                        text = lambda_translator(child, text, level + 1)
+                        text = lambda_translator(child, text, level + 1, params)
 
 
         elif node[0] == "Symbols Table":
@@ -720,8 +734,8 @@ def lambda_translator(node, text, level=0):
 
         elif node[0] == "Sequencing":
             
-            left_inst = lambda_translator(node[1], text, level + 1)
-            right_inst = lambda_translator(node[2], text, level + 1)
+            left_inst = lambda_translator(node[1], text, level + 1, params)
+            right_inst = lambda_translator(node[2], text, level + 1, params)
 
             text = f"({right_inst})({left_inst})"
 
@@ -737,7 +751,7 @@ def lambda_translator(node, text, level=0):
                 text = node[1]
 
         elif node[0] == "Ident":
-
+            
             number = current_scope.lookup(node[1], 1)
             text = "x" + str(number)
 
@@ -753,96 +767,85 @@ def lambda_translator(node, text, level=0):
             iter_scope = current_scope
 
             var_counter = 0
-            var_counter_temp = 2
+            var_counter_temp = 0
+
+            var_assigned = False
 
             while iter_scope != None:
                 
                 iter_xi_temp = ""
                 iter_consi_temp = ""
+                
+                for var, tipo in iter_scope.symbols.items():
+                
+                    iter_xi_temp = "lambda x" + str(tipo[1]) + ":" + iter_xi_temp
 
-                if iter_scope == current_scope:
-                    
-                    for var, tipo in iter_scope.symbols.items():
-                    
-                        iter_xi_temp = "lambda x" + str(tipo[1]) + ":" + iter_xi_temp
-
-                        if(var == asign_var):
-
-                            exp_text = lambda_translator(node[2], text, level + 1)
-
-                            if(tipo[0][0] == 'function' and tipo[0][1] == 1):
-                                exp_text = "[" + exp_text + "]"
-
-                            if(i == 0 and iter_scope.parent == None):
-                                iter_consi_temp = "cons(" + exp_text + ")(nil)" + iter_consi_temp
-                                i += 1
-                            else:
-
-                                if iter_consi_temp != "":
-                                    iter_consi_temp = "cons(" + exp_text + ")" + "(" + iter_consi_temp + ")"
-                                else:
-                                    iter_consi_temp = "cons(" + exp_text + ")"
-
-                        else:
-                            if(i == 0 and iter_scope.parent == None):
-                                iter_consi_temp = "cons(x" + str(tipo[1]) + ")(nil)" + iter_consi_temp
-                                i += 1
-                            else:
-
-                                if iter_consi_temp != "":
-                                    iter_consi_temp = "cons(x" + str(tipo[1]) + ")" + "(" + iter_consi_temp + ")"
-                                else:
-                                    iter_consi_temp = "cons(x" + str(tipo[1]) + ")"
+                    if(var == asign_var and not(var_assigned)):
                         
-                        var_counter += 1
-                else:
+                        var_assigned = True
 
-                    for var, tipo in iter_scope.symbols.items():
-                    
-                        iter_xi_temp = "lambda x" + str(tipo[1]) + ":" + iter_xi_temp
+                        exp_text = lambda_translator(node[2], text, level + 1, params)
 
-                        if(i == 0):
-                            iter_consi_temp = "cons(x" + str(tipo[1]) + ")(nil)" + iter_consi_temp
+                        if(tipo[0][0] == 'function' and tipo[0][1] == 1):
+                            exp_text = "[" + exp_text + "]"
+
+                        if(i == 0 and iter_scope.parent == None):
+                            iter_consi_temp = "cons(" + exp_text + ")(nil)" + iter_consi_temp
                             i += 1
                         else:
 
                             if iter_consi_temp != "":
+                                iter_consi_temp = "cons(" + exp_text + ")" + "(" + iter_consi_temp + ")"
+                            else:
+                                iter_consi_temp = "cons(" + exp_text + ")"
+
+                    else:
+                        if(i == 0 and iter_scope.parent == None):
+                            iter_consi_temp = "cons(x" + str(tipo[1]) + ")(nil)" + iter_consi_temp
+                            i += 1
+                        else:
+                            if iter_consi_temp != "":
                                 iter_consi_temp = "cons(x" + str(tipo[1]) + ")" + "(" + iter_consi_temp + ")"
                             else:
                                 iter_consi_temp = "cons(x" + str(tipo[1]) + ")"
-                        
-                        var_counter += 1
-                
-                print(f"Este es var counter:{var_counter} y este var_counter_temp:{var_counter_temp}")
+                    
+                    var_counter += 1
 
                 iter_xi = iter_xi + iter_xi_temp
 
                 if iter_consi != "":
-                    iter_consi =  iter_consi[:-(var_counter_temp - 1)] + "(" +  iter_consi_temp + ")" + ((var_counter_temp - 1) * ')')
+                    if var_counter_temp != 1:
+                        iter_consi =  iter_consi[:-(var_counter_temp - 1)] + "(" +  iter_consi_temp + ")" + ((var_counter_temp - 1) * ')')
+                    else:
+                        iter_consi =  iter_consi + "(" +  iter_consi_temp + ")"
                 else:
                     iter_consi =  iter_consi_temp
 
-                print("Este es iter_consi: " + iter_consi)
-
                 iter_scope = iter_scope.parent
 
-                var_counter_temp = var_counter
+                var_counter_temp += var_counter
                 var_counter = 0
 
+
             if(first_instruction == 0 and in_block == 0):
-                first_instruction += 1
-                asign_text = "(" + asign_text + iter_xi + " " + iter_consi + ")" + ")" + "(x1)" 
+
+                first_instruction = 1
+                asign_text = "(" + asign_text + iter_xi + " " + iter_consi + ")" + ")" + "(x1)"
+
+            elif(first_instruction == 0 and in_block == 1):
+                
+                first_instruction = 1
+                asign_text = "(" + asign_text + iter_xi + " " + iter_consi + ")" + ")" + "(" + params + ")"
+
             else:
                 asign_text = asign_text + iter_xi + " " + iter_consi + ")"
 
             text = asign_text
-
-            in_block = 0
             
             
         elif node[0] == "Mult":
 
-            text = f"{lambda_translator(node[1], text, level + 1)}*{lambda_translator(node[2], text, level + 1)}"
+            text = f"{lambda_translator(node[1], text, level + 1, params)}*{lambda_translator(node[2], text, level + 1, params)}"
 
 
         elif node[0] == "Comma":
@@ -851,9 +854,9 @@ def lambda_translator(node, text, level=0):
 
             if first_comma == 0:
                 first_comma = 1
-                text = f"[{lambda_translator(node[1], text, level + 1)},{lambda_translator(node[2], text, level + 1)}]"
+                text = f"[{lambda_translator(node[1], text, level + 1, params)},{lambda_translator(node[2], text, level + 1, params)}]"
             else:
-                text = f"{lambda_translator(node[1], text, level + 1)},{lambda_translator(node[2], text, level + 1)}"
+                text = f"{lambda_translator(node[1], text, level + 1, params)},{lambda_translator(node[2], text, level + 1, params)}"
 
             if node[2][0] != "Comma":
                 first_comma = 0
@@ -861,81 +864,88 @@ def lambda_translator(node, text, level=0):
 
         elif node[0] == "ReadFunction":
 
-            text = f"{lambda_translator(node[1], text, level + 1)}[{lambda_translator(node[2], text, level + 1)}]"
+            text = f"{lambda_translator(node[1], text, level + 1, params)}[{lambda_translator(node[2], text, level + 1, params)}]"
 
         elif node[0] == "Plus":
 
-            text = f"{lambda_translator(node[1], text, level + 1)}+{lambda_translator(node[2], text, level + 1)}"
+            text = f"{lambda_translator(node[1], text, level + 1, params)}+{lambda_translator(node[2], text, level + 1, params)}"
 
         elif node[0] == "Minus":
 
-            text = f"{lambda_translator(node[1], text, level + 1)}-{lambda_translator(node[2], text, level + 1)}"
+            text = f"{lambda_translator(node[1], text, level + 1, params)}-{lambda_translator(node[2], text, level + 1, params)}"
 
         elif node[0] == "UMinus":
 
-            text = f"-{lambda_translator(node[1], text, level + 1)}"
+            text = f"-{lambda_translator(node[1], text, level + 1, params)}"
 
         elif node[0] == "Or":
 
-            text = f"{lambda_translator(node[1], text, level + 1)} or {lambda_translator(node[2], text, level + 1)}"
+            text = f"{lambda_translator(node[1], text, level + 1, params)} or {lambda_translator(node[2], text, level + 1, params)}"
 
         elif node[0] == "And":
 
-            text = f"{lambda_translator(node[1], text, level + 1)} and {lambda_translator(node[2], text, level + 1)}"
+            text = f"{lambda_translator(node[1], text, level + 1, params)} and {lambda_translator(node[2], text, level + 1, params)}"
 
         elif node[0] == "Equal":
 
-            text = f"{lambda_translator(node[1], text, level + 1)} == {lambda_translator(node[2], text, level + 1)}"
+            text = f"{lambda_translator(node[1], text, level + 1, params)} == {lambda_translator(node[2], text, level + 1, params)}"
 
 
         elif node[0] == "NotEqual": 
             
-            text = f"{lambda_translator(node[1], text, level + 1)} != {lambda_translator(node[2], text, level + 1)}"
+            text = f"{lambda_translator(node[1], text, level + 1, params)} != {lambda_translator(node[2], text, level + 1, params)}"
         
         elif node[0] == "Leq":
         
-            text = f"{lambda_translator(node[1], text, level + 1)} <= {lambda_translator(node[2], text, level + 1)}"
+            text = f"{lambda_translator(node[1], text, level + 1, params)} <= {lambda_translator(node[2], text, level + 1, params)}"
 
         elif node[0] == "Less":
         
-            text = f"{lambda_translator(node[1], text, level + 1)} < {lambda_translator(node[2], text, level + 1)}"
+            text = f"{lambda_translator(node[1], text, level + 1, params)} < {lambda_translator(node[2], text, level + 1, params)}"
 
         elif node[0] == "Geq":
         
-            text = f"{lambda_translator(node[1], text, level + 1)} >= {lambda_translator(node[2], text, level + 1)}"
+            text = f"{lambda_translator(node[1], text, level + 1, params)} >= {lambda_translator(node[2], text, level + 1, params)}"
         
         elif node[0] == "Greater":
 
-            text = f"{lambda_translator(node[1], text, level + 1)} > {lambda_translator(node[2], text, level + 1)}"
+            text = f"{lambda_translator(node[1], text, level + 1, params)} > {lambda_translator(node[2], text, level + 1, params)}"
 
         elif node[0] == "Not":
 
-            text = f"not({lambda_translator(node[1], text, level + 1)})"
+            text = f"not({lambda_translator(node[1], text, level + 1, params)})"
 
         elif node[0] in expressions_extra:
 
             for child in node[1:-1]:
-                text = lambda_translator(child, text, level + 1)
+                text = lambda_translator(child, text, level + 1, params)
 
         elif node[0] == "If":
             
             last_then = 0
 
-            if first_instruction == 0:
-                first_instruction += 1
+            if first_instruction == 0 and in_block == 0:
+                first_instruction = 1
 
                 if (node[1][0] == "Then"):
-                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1)} else (x1))(x1)"
+                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1, params)} else (x1))(x1)"
                 else:
-                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1)})(x1)"
+                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1, params)})(x1)"
+
+            elif(first_instruction == 0 and in_block == 1):
+                first_instruction = 1
+                
+                if (node[1][0] == "Then"):
+                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1, params)} else (x1))({params})"
+                else:
+                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1, params)})({params})"
 
             else:
                 
                 if (node[1][0] == "Then"):
-                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1)} else (x1))"
+                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1, params)} else (x1))"
                 else:
-                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1)})"
-                
+                    text = f"(lambda x1: {lambda_translator(node[1], text, level + 1, params)})"
 
         elif node[0] == "Guard":
             
@@ -943,8 +953,8 @@ def lambda_translator(node, text, level=0):
             if (last_then == 0):
                 last_then = 1
             
-            guard_right = lambda_translator(node[2], text, level + 1)
-            guard_left = lambda_translator(node[1], text, level + 1)
+            guard_right = lambda_translator(node[2], text, level + 1, params)
+            guard_left = lambda_translator(node[1], text, level + 1, params)
 
             if (node[2][0] == "Then" and f_last_then == 0):
                 text = f"{guard_left} else ({guard_right} else (x1))"
@@ -958,19 +968,28 @@ def lambda_translator(node, text, level=0):
         elif node[0] == "Then":
 
             iter_xi = ""
+            iter_xi_temp = ""
             i = 0
 
-            for var, tipo in current_scope.symbols.items():
-                
-                iter_xi = "lambda x" + str(tipo[1]) + ":" + iter_xi
+            iter_scope = current_scope
 
-            text = f"({lambda_translator(node[2], text, level + 1)})(x1) if (apply ({iter_xi} {lambda_translator(node[1], text, level + 1)}))(x1)"
+            while iter_scope != None:
+
+                for var, tipo in iter_scope.symbols.items():
+                    
+                    iter_xi_temp = "lambda x" + str(tipo[1]) + ":" + iter_xi_temp
+                
+                iter_xi = iter_xi + iter_xi_temp
+                iter_xi_temp = ""
+                iter_scope = iter_scope.parent
+
+            text = f"({lambda_translator(node[2], text, level + 1, params)})(x1) if (apply ({iter_xi} {lambda_translator(node[1], text, level + 1, params)}))(x1)"
 
         else:
 
             for child in node[1:]:
                 if child != 'int' and child != 'bool':
-                    text = lambda_translator(child, text, level + 1) + text
+                    text = lambda_translator(child, text, level + 1, params) + text
 
     else:
         print(f"{indent}{node}")
@@ -985,7 +1004,7 @@ try:
 
     translate_to_lambda(result)
 
-    #print(result)
+    print(result)
 
 
 except ParserException as e:
